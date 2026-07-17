@@ -1,0 +1,9 @@
+<Project>
+
+  <!-- Bỏ qua lỗi thiếu "Prune Package data" do bản đóng gói .NET 10 của Arch Linux còn thiếu.
+       Áp dụng cho MỌI project trong solution (Directory.Build.props tự lan xuống thư mục con). -->
+  <PropertyGroup>
+    <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
+  </PropertyGroup>
+
+</Project>
