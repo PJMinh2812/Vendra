@@ -1,8 +1,15 @@
+using MediatR;
+using Vendra.Application;
+using Vendra.Application.Ping;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Bật Swagger để test API bằng giao diện web (không cần Postman)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Đăng ký toàn bộ dịch vụ tầng Application (MediatR + các Handler)
+builder.Services.AddApplication();
 
 var app = builder.Build();
 
@@ -15,7 +22,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Endpoint kiểm tra sức khỏe: gọi GET /ping -> trả "pong"
-app.MapGet("/ping", () => "pong");
+// /ping bây giờ đi qua CQRS: gửi PingQuery → MediatR tìm PingQueryHandler → trả "pong"
+app.MapGet("/ping", async (IMediator mediator) =>
+    await mediator.Send(new PingQuery()));
 
 app.Run();

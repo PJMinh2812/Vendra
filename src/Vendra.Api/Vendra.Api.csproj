@@ -11,4 +11,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Vendra.Application\Vendra.Application.csproj" />
+    <ProjectReference Include="..\Vendra.Infrastructure\Vendra.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

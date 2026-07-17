@@ -487,3 +487,6 @@ $RECYCLE.BIN/
 
 # Local Claude tooling (skill/memory) — keep local, do not publish
 /.claude/
+
+# Personal interview study notes — keep local, do not publish
+/docs/interview/
