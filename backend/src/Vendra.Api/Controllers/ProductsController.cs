@@ -1,4 +1,5 @@
 using Vendra.Business.Services;
+using Vendra.Business.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,50 @@ namespace Vendra.Api.Controllers
             var products = await _productService.GetAllAsync();
             
             return Ok(products);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var product = await _productService.GetByIdAsync(id);
+            if (product is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(product);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(CreateProductDto dto)
+        {
+            var created = await _productService.CreateAsync(dto);
+        
+            return CreatedAtAction(nameof(GetById), new {id = created.Id}, created);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, UpdateProductDto dto)
+        {
+            var success = await _productService.UpdateAsync(id, dto);
+            if (!success)
+            {
+                return NotFound();
+            }    
+
+            return NoContent();
+        }
+
+            [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var success = await _productService.DeleteAsync(id);
+            if (!success)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
         }
     }
 }
