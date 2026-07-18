@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Personal CV files
+CV/
+
 # User-specific files
 *.rsuser
 *.suo
@@ -481,9 +484,11 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
+# Frontend build output (Vite)
+/frontend/dist/
+
 # Personal planning notes (keep local, do not publish)
-/ke-hoach-du-an-ecommerce-dotnet.md
-/lo-trinh-hoc-dsa-csharp.md
+/docs/planning/
 
 # Local Claude tooling (skill/memory) — keep local, do not publish
 /.claude/
