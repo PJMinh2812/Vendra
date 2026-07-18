@@ -16,7 +16,7 @@ CREATE TABLE Shops(
     Name NVARCHAR(200) NOT NULL,
     Description NVARCHAR(1000) NULL,
     Status NVARCHAR(20) NOT NULL DEFAULT 'Pending',
-    CreateAt DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
 );
 
 -- 3. Products
@@ -30,7 +30,7 @@ Create Table Products(
     Stock INT NOT NULL DEFAULT 0,
     ImageURL NVARCHAR(500) Null,
     IsActive BIT NOT NULL DEFAULT 1,
-    CreateAt DateTime2 NOT NULL DEFAULT SYSDATETIME(),
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
 
     CONSTRAINT FK_Products_Shops FOREIGN KEY (ShopId) REFERENCES Shops(Id),
     CONSTRAINT FK_Products_Categories FOREIGN KEY (CategoryId) REFERENCES Categories(Id),
@@ -83,20 +83,3 @@ CREATE TABLE OrderItems (
     CONSTRAINT FK_OrderItems_Products FOREIGN KEY (ProductId) REFERENCES Products(Id),
     CONSTRAINT CK_OrderItems_Quantity CHECK (Quantity > 0)
 );
-
-
-INSERT INTO Categories (Name) VALUES
-    (N'Thời trang nam'),
-    (N'Thời trang nữ'),
-    (N'Điện tử'),
-    (N'Đồ gia dụng');
-
-INSERT INTO Shops (OwnerUserId, Name, Description, Status) VALUES
-    ('seed-owner-1', N'Shop Thời Trang ABC', N'Chuyên đồ nam nữ', 'Approved'),
-    ('seed-owner-2', N'Shop Điện Tử XYZ', N'Đồ điện tử chính hãng', 'Approved');
-
-INSERT INTO Products (ShopId, CategoryId, Name, Description, Price, Stock, ImageUrl, IsActive) VALUES
-    (1, 1, N'Áo sơ mi nam trắng', N'Vải cotton thoáng mát', 250000, 50, NULL, 1),
-    (1, 2, N'Váy hoa nữ mùa hè', N'Chất liệu voan mềm', 320000, 30, NULL, 1),
-    (2, 3, N'Tai nghe Bluetooth', N'Chống ồn chủ động', 890000, 20, NULL, 1),
-    (2, 3, N'Sạc dự phòng 10000mAh', N'Sạc nhanh 2 chiều', 350000, 40, NULL, 1);
