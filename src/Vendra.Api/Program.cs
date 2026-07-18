@@ -1,15 +1,16 @@
-using MediatR;
-using Vendra.Application;
-using Vendra.Application.Ping;
+using Vendra.Business;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Đăng ký MVC Controllers (thay vì Minimal API) — khớp với cách slide/course dạy: [ApiController] + [Route]
+builder.Services.AddControllers();
 
 // Bật Swagger để test API bằng giao diện web (không cần Postman)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Đăng ký toàn bộ dịch vụ tầng Application (MediatR + các Handler)
-builder.Services.AddApplication();
+// Đăng ký toàn bộ dịch vụ tầng Business (Service + interface của nó)
+builder.Services.AddBusiness();
 
 var app = builder.Build();
 
@@ -22,8 +23,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// /ping bây giờ đi qua CQRS: gửi PingQuery → MediatR tìm PingQueryHandler → trả "pong"
-app.MapGet("/ping", async (IMediator mediator) =>
-    await mediator.Send(new PingQuery()));
+// Kích hoạt routing tới các action trong Controllers (PingController, sau này ProductController...)
+app.MapControllers();
 
 app.Run();

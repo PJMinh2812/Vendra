@@ -1,8 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Vendra.Api/Vendra.Api.csproj" />
-    <Project Path="src/Vendra.Application/Vendra.Application.csproj" />
-    <Project Path="src/Vendra.Domain/Vendra.Domain.csproj" />
-    <Project Path="src/Vendra.Infrastructure/Vendra.Infrastructure.csproj" />
+    <Project Path="src/Vendra.Business/Vendra.Business.csproj" />
+    <Project Path="src/Vendra.DataAccess/Vendra.DataAccess.csproj" />
   </Folder>
 </Solution>

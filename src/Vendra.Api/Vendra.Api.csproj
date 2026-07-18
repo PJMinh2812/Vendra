@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Vendra.Application\Vendra.Application.csproj" />
-    <ProjectReference Include="..\Vendra.Infrastructure\Vendra.Infrastructure.csproj" />
+    <ProjectReference Include="..\Vendra.Business\Vendra.Business.csproj" />
+    <ProjectReference Include="..\Vendra.DataAccess\Vendra.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>
