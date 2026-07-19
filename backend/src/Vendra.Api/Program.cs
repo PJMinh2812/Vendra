@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Vendra.Business;
 using Vendra.Business.Settings;
 using Vendra.DataAccess;
+using Vendra.DataAccess.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? Array.Empty<string>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy.WithOrigins(corsOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -55,6 +69,24 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
+
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var adminEmail = "admin@vendra.test";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser is null)
+    {
+        adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            FullName = "Admin Vendra",
+            EmailConfirmed = true
+        };
+
+        await userManager.CreateAsync(adminUser, "Admin@123456");
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
 }
 
 if (app.Environment.IsDevelopment())
@@ -64,6 +96,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
