@@ -1,3 +1,5 @@
+using Azure;
+using Microsoft.EntityFrameworkCore;
 using Vendra.Business.DTOs;
 using Vendra.DataAccess.Models;
 using Vendra.DataAccess.UnitOfWork;
@@ -13,16 +15,61 @@ public class ProductService : IProductService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<ProductDto>> GetAllAsync()
+        public async Task<PagedResultDto<ProductDto>> GetAllAsync(ProductQueryDto query)
     {
-        var products = await _unitOfWork.Repository<Product>()
-            .GetAllAsync(p => p.Category, p => p.Shop);
+        var productsQuery = _unitOfWork.Repository<Product>().Query()
+            .Include(p => p.Category)
+            .Include(p => p.Shop)
+            .Where(p => p.IsActive);
 
-        return products
-            .Where(p => p.IsActive)
-            .Select(MapToDto)
-            .ToList();
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            productsQuery = productsQuery.Where(p => p.Name.Contains(query.Search));
+        }
+
+        if (query.CategoryId.HasValue)
+        {
+            productsQuery = productsQuery.Where(p => p.CategoryId == query.CategoryId.Value);
+        }
+
+        if (query.MinPrice.HasValue)
+        {
+            productsQuery = productsQuery.Where(p => p.Price >= query.MinPrice.Value);
+        }
+
+        if (query.MaxPrice.HasValue)
+        {
+            productsQuery = productsQuery.Where(p => p.Price <= query.MaxPrice.Value);
+        }
+
+        var totalCount = await productsQuery.CountAsync();
+
+        var items = await productsQuery
+            .OrderBy(p => p.Id)
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Price = p.Price,
+                Stock = p.Stock,
+                ImageUrl = p.ImageUrl,
+                CategoryName = p.Category.Name,
+                ShopName = p.Shop.Name
+            })
+            .ToListAsync();
+
+        return new PagedResultDto<ProductDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
     }
+
 
     public async Task<ProductDto?> GetByIdAsync(int id)
     {

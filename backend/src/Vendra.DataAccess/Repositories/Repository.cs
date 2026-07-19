@@ -37,6 +37,11 @@ public class Repository<T> : IRepository<T> where T : class
         return await query.ToListAsync();
     }
 
+    public IQueryable<T> Query()
+    {
+        return _dbSet;
+    }
+
     public async Task AddAsync(T entity)
     {
         await _dbSet.AddAsync(entity);

@@ -9,6 +9,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IPingService, PingService>();
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<ICategoryService, CategoryService>();
 
         return services;
     }

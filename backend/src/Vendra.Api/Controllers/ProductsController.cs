@@ -21,12 +21,13 @@ namespace Vendra.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] ProductQueryDto query)
         {
-            var products = await _productService.GetAllAsync();
-            
-            return Ok(products);
+            var result = await _productService.GetAllAsync(query);
+
+            return Ok(result);
         }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
