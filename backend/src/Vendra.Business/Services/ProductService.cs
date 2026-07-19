@@ -1,4 +1,3 @@
-using Azure;
 using Microsoft.EntityFrameworkCore;
 using Vendra.Business.DTOs;
 using Vendra.DataAccess.Models;
@@ -15,7 +14,7 @@ public class ProductService : IProductService
         _unitOfWork = unitOfWork;
     }
 
-        public async Task<PagedResultDto<ProductDto>> GetAllAsync(ProductQueryDto query)
+    public async Task<PagedResultDto<ProductDto>> GetAllAsync(ProductQueryDto query)
     {
         var productsQuery = _unitOfWork.Repository<Product>().Query()
             .Include(p => p.Category)
@@ -70,7 +69,6 @@ public class ProductService : IProductService
         };
     }
 
-
     public async Task<ProductDto?> GetByIdAsync(int id)
     {
         var product = await _unitOfWork.Repository<Product>()
@@ -79,11 +77,18 @@ public class ProductService : IProductService
         return product is null ? null : MapToDto(product);
     }
 
-    public async Task<ProductDto> CreateAsync(CreateProductDto dto)
+    public async Task<ProductDto> CreateAsync(string ownerUserId, CreateProductDto dto)
     {
+        var shop = await GetOwnedShopAsync(ownerUserId);
+
+        if (shop.Status != "Approved")
+        {
+            throw new InvalidOperationException("Shop chưa được duyệt, chưa thể đăng sản phẩm.");
+        }
+
         var product = new Product
         {
-            ShopId = dto.ShopId,
+            ShopId = shop.Id,
             CategoryId = dto.CategoryId,
             Name = dto.Name,
             Description = dto.Description,
@@ -102,12 +107,20 @@ public class ProductService : IProductService
         return MapToDto(created!);
     }
 
-    public async Task<bool> UpdateAsync(int id, UpdateProductDto dto)
+    public async Task<ProductActionResult> UpdateAsync(string ownerUserId, int id, UpdateProductDto dto)
     {
         var product = await _unitOfWork.Repository<Product>().GetByIdAsync(id);
         if (product is null)
         {
-            return false;
+            return ProductActionResult.NotFound;
+        }
+
+        var shop = await _unitOfWork.Repository<Shop>().Query()
+            .FirstOrDefaultAsync(s => s.OwnerUserId == ownerUserId);
+
+        if (shop is null || product.ShopId != shop.Id)
+        {
+            return ProductActionResult.Forbidden;
         }
 
         product.CategoryId = dto.CategoryId;
@@ -120,22 +133,43 @@ public class ProductService : IProductService
         _unitOfWork.Repository<Product>().Update(product);
         await _unitOfWork.SaveChangesAsync();
 
-        return true;
+        return ProductActionResult.Success;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<ProductActionResult> DeleteAsync(string ownerUserId, int id)
     {
         var product = await _unitOfWork.Repository<Product>().GetByIdAsync(id);
         if (product is null)
         {
-            return false;
+            return ProductActionResult.NotFound;
+        }
+
+        var shop = await _unitOfWork.Repository<Shop>().Query()
+            .FirstOrDefaultAsync(s => s.OwnerUserId == ownerUserId);
+
+        if (shop is null || product.ShopId != shop.Id)
+        {
+            return ProductActionResult.Forbidden;
         }
 
         product.IsActive = false;
         _unitOfWork.Repository<Product>().Update(product);
         await _unitOfWork.SaveChangesAsync();
 
-        return true;
+        return ProductActionResult.Success;
+    }
+
+    private async Task<Shop> GetOwnedShopAsync(string ownerUserId)
+    {
+        var shop = await _unitOfWork.Repository<Shop>().Query()
+            .FirstOrDefaultAsync(s => s.OwnerUserId == ownerUserId);
+
+        if (shop is null)
+        {
+            throw new InvalidOperationException("Bạn chưa có shop, hãy đăng ký shop trước.");
+        }
+
+        return shop;
     }
 
     private static ProductDto MapToDto(Product p) => new()

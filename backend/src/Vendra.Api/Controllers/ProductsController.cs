@@ -1,11 +1,8 @@
-using Vendra.Business.Services;
-using Vendra.Business.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-//using Vendra.Api.Models;
+using Vendra.Business.DTOs;
+using Vendra.Business.Services;
 
 namespace Vendra.Api.Controllers
 {
@@ -28,7 +25,6 @@ namespace Vendra.Api.Controllers
             return Ok(result);
         }
 
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -42,35 +38,49 @@ namespace Vendra.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Seller")]
         public async Task<IActionResult> Create(CreateProductDto dto)
         {
-            var created = await _productService.CreateAsync(dto);
-        
-            return CreatedAtAction(nameof(GetById), new {id = created.Id}, created);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            try
+            {
+                var created = await _productService.CreateAsync(userId, dto);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Seller")]
         public async Task<IActionResult> Update(int id, UpdateProductDto dto)
         {
-            var success = await _productService.UpdateAsync(id, dto);
-            if (!success)
-            {
-                return NotFound();
-            }    
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _productService.UpdateAsync(userId, id, dto);
 
-            return NoContent();
+            return result switch
+            {
+                ProductActionResult.NotFound => NotFound(),
+                ProductActionResult.Forbidden => Forbid(),
+                _ => NoContent()
+            };
         }
 
-            [HttpDelete("{id}")]
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Seller")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _productService.DeleteAsync(id);
-            if (!success)
-            {
-                return NotFound();
-            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _productService.DeleteAsync(userId, id);
 
-            return NoContent();
+            return result switch
+            {
+                ProductActionResult.NotFound => NotFound(),
+                ProductActionResult.Forbidden => Forbid(),
+                _ => NoContent()
+            };
         }
     }
 }

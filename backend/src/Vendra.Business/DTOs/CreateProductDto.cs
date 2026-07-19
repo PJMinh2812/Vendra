@@ -4,10 +4,6 @@ namespace Vendra.Business.DTOs;
 
 public class CreateProductDto
 {
-
-    [Required]
-    public int ShopId {get; set;}
-
     [Required]
     public int CategoryId {get; set;}
 
