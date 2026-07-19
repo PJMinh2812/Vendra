@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Vendra.DataAccess.Identity;
 using Vendra.DataAccess.Models;
 using Vendra.DataAccess.UnitOfWork;
 
@@ -11,7 +13,14 @@ public static class DependencyInjection
     {
         services.AddDbContext<VendraDbContext>(options => options.UseSqlServer(connectionString));
         services.AddScoped<IUnitOfWork, Vendra.DataAccess.UnitOfWork.UnitOfWork>();
-        
+
+        services.AddDbContext<AppIdentityDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddIdentityCore<ApplicationUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<AppIdentityDbContext>();
+
+
+
         return services;
     }
 }
