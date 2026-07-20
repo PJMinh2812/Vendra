@@ -45,7 +45,7 @@ export default function Header() {
       <div className="header__top">
         <div className="container header__top-inner">
           {isAdmin ? (
-            <Link to="/admin/shops">Quản Trị</Link>
+            <Link to="/admin">Quản Trị</Link>
           ) : (
             <Link to="/seller">Kênh Người Bán</Link>
           )}
@@ -91,7 +91,7 @@ export default function Header() {
       </div>
 
       <div className="header__main container">
-        <Link to={isAdmin ? '/admin/shops' : '/'} className="header__logo">
+        <Link to={isAdmin ? '/admin' : '/'} className="header__logo">
           Vendra
         </Link>
 

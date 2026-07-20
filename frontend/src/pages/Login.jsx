@@ -25,7 +25,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       const loggedIn = await login({ email, password });
-      navigate(loggedIn.role === 'Admin' ? '/admin/shops' : '/');
+      navigate(loggedIn.role === 'Admin' ? '/admin' : '/');
     } catch (err) {
       setError(err.message);
     } finally {

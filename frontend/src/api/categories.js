@@ -25,3 +25,17 @@ export async function getCategories() {
   await delay(150);
   return categories;
 }
+
+// --- Admin Dashboard ---
+export async function createCategory(name) {
+  const dto = await apiFetch('/categories', { method: 'POST', body: JSON.stringify({ name }) });
+  return adaptCategory(dto);
+}
+
+export async function updateCategory(id, name) {
+  return apiFetch(`/categories/${id}`, { method: 'PUT', body: JSON.stringify({ name }) });
+}
+
+export async function deleteCategory(id) {
+  return apiFetch(`/categories/${id}`, { method: 'DELETE' });
+}

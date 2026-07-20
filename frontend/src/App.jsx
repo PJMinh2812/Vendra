@@ -20,8 +20,11 @@ import SellerShop from './pages/seller/SellerShop';
 import SellerProducts from './pages/seller/SellerProducts';
 import SellerProductForm from './pages/seller/SellerProductForm';
 import SellerOrders from './pages/seller/SellerOrders';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminShops from './pages/admin/AdminShops';
 import AdminOrders from './pages/admin/AdminOrders';
+import AdminCategories from './pages/admin/AdminCategories';
+import AdminUsers from './pages/admin/AdminUsers';
 
 export default function App() {
   return (
@@ -87,6 +90,14 @@ export default function App() {
               />
 
               <Route
+                path="/admin"
+                element={
+                  <RoleRoute allow="Admin">
+                    <AdminDashboard />
+                  </RoleRoute>
+                }
+              />
+              <Route
                 path="/admin/shops"
                 element={
                   <RoleRoute allow="Admin">
@@ -99,6 +110,22 @@ export default function App() {
                 element={
                   <RoleRoute allow="Admin">
                     <AdminOrders />
+                  </RoleRoute>
+                }
+              />
+              <Route
+                path="/admin/categories"
+                element={
+                  <RoleRoute allow="Admin">
+                    <AdminCategories />
+                  </RoleRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <RoleRoute allow="Admin">
+                    <AdminUsers />
                   </RoleRoute>
                 }
               />

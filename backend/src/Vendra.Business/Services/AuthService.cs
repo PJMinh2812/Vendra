@@ -68,6 +68,11 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Email hoặc mật khẩu không đúng.");
         }
 
+        if (await _userManager.IsLockedOutAsync(user))
+        {
+            throw new UnauthorizedAccessException("Tài khoản đã bị khóa.");
+        }
+
         return await GenerateAuthResultAsync(user);
     }
 

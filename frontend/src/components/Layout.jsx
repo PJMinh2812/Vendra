@@ -9,7 +9,7 @@ export default function Layout() {
 
   // Admin chỉ sống trong khu /admin — chặn mọi lối vào phần mua sắm của khách.
   if (user?.role === 'Admin' && !location.pathname.startsWith('/admin')) {
-    return <Navigate to="/admin/shops" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   return (
