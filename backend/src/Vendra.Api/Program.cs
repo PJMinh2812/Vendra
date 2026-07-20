@@ -44,6 +44,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("Short", policy => policy.Expire(TimeSpan.FromSeconds(30)));
+});
+
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? Array.Empty<string>();
 
@@ -105,6 +110,8 @@ app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseOutputCache();
 
 app.MapControllers();
 

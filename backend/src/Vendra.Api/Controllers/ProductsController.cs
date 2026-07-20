@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Vendra.Business.DTOs;
 using Vendra.Business.Services;
 
@@ -26,6 +27,7 @@ namespace Vendra.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [OutputCache(PolicyName = "Short")]
         public async Task<IActionResult> GetById(int id)
         {
             var product = await _productService.GetByIdAsync(id);

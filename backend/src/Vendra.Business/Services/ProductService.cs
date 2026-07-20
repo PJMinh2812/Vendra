@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 using Vendra.Business.DTOs;
 using Vendra.DataAccess.Models;
 using Vendra.DataAccess.UnitOfWork;
@@ -8,13 +10,36 @@ namespace Vendra.Business.Services;
 public class ProductService : IProductService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMemoryCache _cache;
+    private static CancellationTokenSource _cacheTokenSource = new();
 
-    public ProductService(IUnitOfWork unitOfWork)
+    public ProductService(IUnitOfWork unitOfWork, IMemoryCache cache)
     {
         _unitOfWork = unitOfWork;
+        _cache = cache;
     }
 
     public async Task<PagedResultDto<ProductDto>> GetAllAsync(ProductQueryDto query)
+    {
+        var cacheKey = $"products:{query.Search}:{query.CategoryId}:{query.MinPrice}:{query.MaxPrice}:{query.Page}:{query.PageSize}";
+
+        if (_cache.TryGetValue(cacheKey, out PagedResultDto<ProductDto>? cached))
+        {
+            return cached!;
+        }
+
+        var result = await LoadAllAsync(query);
+
+        var cacheOptions = new MemoryCacheEntryOptions()
+            .SetAbsoluteExpiration(TimeSpan.FromSeconds(60))
+            .AddExpirationToken(new CancellationChangeToken(_cacheTokenSource.Token));
+
+        _cache.Set(cacheKey, result, cacheOptions);
+
+        return result;
+    }
+
+    private async Task<PagedResultDto<ProductDto>> LoadAllAsync(ProductQueryDto query)
     {
         var productsQuery = _unitOfWork.Repository<Product>().Query()
             .Include(p => p.Category)
@@ -104,6 +129,8 @@ public class ProductService : IProductService
         var created = await _unitOfWork.Repository<Product>()
             .GetByIdAsync(product.Id, p => p.Category, p => p.Shop);
 
+        InvalidateCatalogCache();
+
         return MapToDto(created!);
     }
 
@@ -133,6 +160,8 @@ public class ProductService : IProductService
         _unitOfWork.Repository<Product>().Update(product);
         await _unitOfWork.SaveChangesAsync();
 
+        InvalidateCatalogCache();
+
         return ProductActionResult.Success;
     }
 
@@ -156,7 +185,16 @@ public class ProductService : IProductService
         _unitOfWork.Repository<Product>().Update(product);
         await _unitOfWork.SaveChangesAsync();
 
+        InvalidateCatalogCache();
+
         return ProductActionResult.Success;
+    }
+
+    private static void InvalidateCatalogCache()
+    {
+        var oldTokenSource = Interlocked.Exchange(ref _cacheTokenSource, new CancellationTokenSource());
+        oldTokenSource.Cancel();
+        oldTokenSource.Dispose();
     }
 
     private async Task<Shop> GetOwnedShopAsync(string ownerUserId)

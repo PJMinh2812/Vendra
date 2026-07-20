@@ -1,5 +1,6 @@
 using Vendra.Business.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace Vendra.Api.Controllers
 {
@@ -15,6 +16,7 @@ namespace Vendra.Api.Controllers
         }
 
         [HttpGet]
+        [OutputCache(PolicyName = "Short")]
         public async Task<IActionResult> GetAll()
         {
             var categories = await _categoryService.GetAllAsync();
