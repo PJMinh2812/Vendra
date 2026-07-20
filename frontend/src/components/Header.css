@@ -168,3 +168,61 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.header__user {
+  position: relative;
+  cursor: pointer;
+}
+
+.header__user-name::after {
+  content: ' ▾';
+  font-size: 10px;
+}
+
+.header__user-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 170px;
+  background: #fff;
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card-hover);
+  padding: 8px 0;
+  z-index: 20;
+  text-align: left;
+}
+
+.header__user:hover .header__user-menu {
+  display: block;
+}
+
+.header__user-menu-email {
+  margin: 0 0 4px;
+  padding: 2px 14px 8px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header__user-menu a,
+.header__user-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--color-text);
+  text-align: left;
+  background: none;
+  border: none;
+}
+
+.header__user-menu a:hover,
+.header__user-menu button:hover {
+  background: var(--color-bg);
+}

@@ -40,12 +40,16 @@ export default function Header() {
           <span>Kết nối</span>
           <div className="header__top-right">
             {user ? (
-              <>
-                <span>{user.fullName}</span>
-                <button type="button" className="header__link-btn" onClick={logout}>
-                  Đăng xuất
-                </button>
-              </>
+              <div className="header__user">
+                <span className="header__user-name">{user.fullName}</span>
+                <div className="header__user-menu">
+                  <p className="header__user-menu-email">{user.email}</p>
+                  {user.role === 'Customer' && <Link to="/orders">Đơn Mua</Link>}
+                  <button type="button" onClick={logout}>
+                    Đăng xuất
+                  </button>
+                </div>
+              </div>
             ) : (
               <>
                 <Link to="/register">Đăng Ký</Link>
