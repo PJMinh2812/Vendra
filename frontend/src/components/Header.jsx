@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,8 @@ import './Header.css';
 export default function Header() {
   const [query, setQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
   const { totalCount, items } = useCart();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -19,6 +21,18 @@ export default function Header() {
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Ấn để mở, ấn ra ngoài để đóng lại — không mở theo hover nữa.
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    function onClickOutside(e) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [userMenuOpen]);
 
   function handleSearch(e) {
     e.preventDefault();
@@ -40,15 +54,29 @@ export default function Header() {
           <span>Kết nối</span>
           <div className="header__top-right">
             {user ? (
-              <div className="header__user">
-                <span className="header__user-name">{user.fullName}</span>
-                <div className="header__user-menu">
-                  <p className="header__user-menu-email">{user.email}</p>
-                  {user.role === 'Customer' && <Link to="/orders">Đơn Mua</Link>}
-                  <button type="button" onClick={logout}>
-                    Đăng xuất
-                  </button>
-                </div>
+              <div className="header__user" ref={userMenuRef}>
+                <span className="header__user-name" onClick={() => setUserMenuOpen((v) => !v)}>
+                  {user.fullName}
+                </span>
+                {userMenuOpen && (
+                  <div className="header__user-menu">
+                    <p className="header__user-menu-email">{user.email}</p>
+                    {user.role === 'Customer' && (
+                      <Link to="/orders" onClick={() => setUserMenuOpen(false)}>
+                        Đơn Mua
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        logout();
+                      }}
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <>

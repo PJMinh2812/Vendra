@@ -180,7 +180,6 @@
 }
 
 .header__user-menu {
-  display: none;
   position: absolute;
   top: 100%;
   right: 0;
@@ -193,10 +192,6 @@
   padding: 8px 0;
   z-index: 20;
   text-align: left;
-}
-
-.header__user:hover .header__user-menu {
-  display: block;
 }
 
 .header__user-menu-email {
