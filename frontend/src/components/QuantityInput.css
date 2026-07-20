@@ -1,0 +1,40 @@
+.quantity-input {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  height: 32px;
+  width: fit-content;
+}
+
+.quantity-input button {
+  width: 32px;
+  border: none;
+  background: #fafafa;
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+.quantity-input button:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.quantity-input button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.quantity-input input {
+  width: 44px;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.quantity-input input::-webkit-outer-spin-button,
+.quantity-input input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

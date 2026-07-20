@@ -1,0 +1,8 @@
+.role-route-denied {
+  text-align: center;
+  padding: 64px 16px;
+}
+
+.role-route-denied p {
+  margin: 8px 0;
+}
