@@ -44,6 +44,7 @@ export async function getProducts({
   sort = 'popular',
   page = 1,
   pageSize = 20,
+  random = false,
 } = {}) {
   if (!USE_MOCK) {
     const params = new URLSearchParams({ page, pageSize });
@@ -52,6 +53,7 @@ export async function getProducts({
     if (shopId) params.set('shopId', shopId);
     if (minPrice != null) params.set('minPrice', minPrice);
     if (maxPrice != null) params.set('maxPrice', maxPrice);
+    if (random) params.set('random', 'true');
     const res = await apiFetch(`/products?${params}`);
     return {
       items: applySort(res.items.map(adaptProduct), sort),

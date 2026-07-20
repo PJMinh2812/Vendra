@@ -13,10 +13,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getCategories(), getProducts({ pageSize: 100 })]).then(([cats, prods]) => {
+    Promise.all([getCategories(), getProducts({ random: true, pageSize: 20 })]).then(([cats, prods]) => {
       setCategories(cats);
-      const shuffled = [...prods.items].sort(() => Math.random() - 0.5);
-      setProducts(shuffled.slice(0, 20));
+      setProducts(prods.items);
       setLoading(false);
     });
   }, []);

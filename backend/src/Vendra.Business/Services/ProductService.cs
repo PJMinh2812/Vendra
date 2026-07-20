@@ -21,7 +21,12 @@ public class ProductService : IProductService
 
     public async Task<PagedResultDto<ProductDto>> GetAllAsync(ProductQueryDto query)
     {
-        var cacheKey = $"products:{query.Search}:{query.CategoryId}:{query.MinPrice}:{query.MaxPrice}:{query.Page}:{query.PageSize}";
+        if (query.Random)
+        {
+            return await LoadAllAsync(query);
+        }
+
+        var cacheKey = $"products:{query.Search}:{query.CategoryId}:{query.ShopId}:{query.MinPrice}:{query.MaxPrice}:{query.Page}:{query.PageSize}";
 
         if (_cache.TryGetValue(cacheKey, out PagedResultDto<ProductDto>? cached))
         {
@@ -73,8 +78,11 @@ public class ProductService : IProductService
 
         var totalCount = await productsQuery.CountAsync();
 
-        var items = await productsQuery
-            .OrderBy(p => p.Id)
+        var orderedQuery = query.Random
+            ? productsQuery.OrderBy(p => Guid.NewGuid())
+            : productsQuery.OrderBy(p => p.Id);
+
+        var items = await orderedQuery
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(p => new ProductDto
