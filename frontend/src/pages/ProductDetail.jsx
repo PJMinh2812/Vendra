@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import Rating from '../components/Rating';
 import QuantityInput from '../components/QuantityInput';
 import ProductDetailSkeleton from '../components/ProductDetailSkeleton';
+import ReviewSection from '../components/ReviewSection';
 import { formatPrice, formatSold } from '../utils/format';
 import './ProductDetail.css';
 
@@ -124,6 +125,8 @@ export default function ProductDetail() {
           <h2>Mô Tả Sản Phẩm</h2>
           <p>{product.description}</p>
         </div>
+
+        <ReviewSection productId={product.id} />
       </div>
     </div>
   );

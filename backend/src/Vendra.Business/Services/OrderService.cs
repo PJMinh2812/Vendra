@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Vendra.Business.DTOs;
 using Vendra.DataAccess.Models;
@@ -9,11 +10,13 @@ public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMoMoService _moMoService;
+    private readonly IMapper _mapper;
 
-    public OrderService(IUnitOfWork unitOfWork, IMoMoService moMoService)
+    public OrderService(IUnitOfWork unitOfWork, IMoMoService moMoService, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _moMoService = moMoService;
+        _mapper = mapper;
     }
 
     public async Task<OrderDto> CheckoutAsync(string customerUserId, CreateOrderDto dto)
@@ -211,7 +214,7 @@ public class OrderService : IOrderService
 
         return new PagedResultDto<OrderDto>
         {
-            Items = items.Select(MapOrderDto).ToList(),
+            Items = _mapper.Map<List<OrderDto>>(items),
             TotalCount = totalCount,
             Page = query.Page,
             PageSize = query.PageSize
@@ -223,7 +226,7 @@ public class OrderService : IOrderService
         var order = await OrderDetailQuery()
             .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerUserId == customerUserId);
 
-        return order is null ? null : MapOrderDto(order);
+        return order is null ? null : _mapper.Map<OrderDto>(order);
     }
 
     public async Task<PagedResultDto<SellerSubOrderDto>> GetShopOrdersAsync(string sellerUserId, OrderQueryDto query)
@@ -251,21 +254,7 @@ public class OrderService : IOrderService
 
         return new PagedResultDto<SellerSubOrderDto>
         {
-            Items = items.Select(so => new SellerSubOrderDto
-            {
-                OrderId = so.OrderId,
-                CreatedAt = so.Order.CreatedAt,
-                Status = so.Status,
-                Subtotal = so.Subtotal,
-                Items = so.OrderItems.Select(oi => new OrderItemDto
-                {
-                    ProductId = oi.ProductId,
-                    ProductName = oi.ProductName,
-                    UnitPrice = oi.UnitPrice,
-                    Quantity = oi.Quantity,
-                    LineTotal = oi.UnitPrice * oi.Quantity
-                }).ToList()
-            }).ToList(),
+            Items = _mapper.Map<List<SellerSubOrderDto>>(items),
             TotalCount = totalCount,
             Page = query.Page,
             PageSize = query.PageSize
@@ -286,7 +275,7 @@ public class OrderService : IOrderService
 
         return new PagedResultDto<OrderDto>
         {
-            Items = items.Select(MapOrderDto).ToList(),
+            Items = _mapper.Map<List<OrderDto>>(items),
             TotalCount = totalCount,
             Page = query.Page,
             PageSize = query.PageSize
@@ -416,34 +405,6 @@ public class OrderService : IOrderService
     private async Task<OrderDto> BuildOrderDtoAsync(int orderId)
     {
         var order = await OrderDetailQuery().FirstAsync(o => o.Id == orderId);
-        return MapOrderDto(order);
-    }
-
-    private static OrderDto MapOrderDto(Order order)
-    {
-        return new OrderDto
-        {
-            Id = order.Id,
-            TotalAmount = order.TotalAmount,
-            ShippingAddress = order.ShippingAddress,
-            CreatedAt = order.CreatedAt,
-            PaymentMethod = order.Payment?.Method ?? string.Empty,
-            PaymentStatus = order.Payment?.Status ?? string.Empty,
-            SubOrders = order.SubOrders.Select(so => new SubOrderDto
-            {
-                ShopId = so.ShopId,
-                ShopName = so.Shop.Name,
-                Status = so.Status,
-                Subtotal = so.Subtotal,
-                Items = so.OrderItems.Select(oi => new OrderItemDto
-                {
-                    ProductId = oi.ProductId,
-                    ProductName = oi.ProductName,
-                    UnitPrice = oi.UnitPrice,
-                    Quantity = oi.Quantity,
-                    LineTotal = oi.UnitPrice * oi.Quantity
-                }).ToList()
-            }).ToList()
-        };
+        return _mapper.Map<OrderDto>(order);
     }
 }

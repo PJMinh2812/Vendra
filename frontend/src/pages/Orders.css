@@ -51,7 +51,18 @@
 .orders-suborder__actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
   padding: 0 16px 12px;
+}
+
+.orders-suborder__reviews {
+  display: flex;
+  flex-direction: column;
+}
+
+.orders-suborder__review-form {
+  padding: 0 16px 16px;
 }
 
 .orders-suborder__shop {

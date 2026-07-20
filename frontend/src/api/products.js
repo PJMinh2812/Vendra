@@ -3,9 +3,11 @@ import { products, getProductById as findMockProduct } from '../mock/data';
 
 const PLACEHOLDER_IMAGE = 'https://picsum.photos/seed/vendra-placeholder/600/600';
 
-// Backend ProductDto không có sẵn discount/rating/sold/images[] (những field chỉ mock UI mới cần) —
-// map sang đúng field tên cũ mà ProductCard/ProductDetail đang dùng, id ép về string để khớp
-// cách so sánh id kiểu string sẵn có trong Search.jsx (URL param luôn là string).
+// Backend ProductDto không có sẵn discount/images[] (chỉ mock UI mới cần) — map sang đúng field
+// tên cũ mà ProductCard/ProductDetail đang dùng, id ép về string để khớp cách so sánh id kiểu
+// string sẵn có trong Search.jsx (URL param luôn là string).
+// rating/ratingCount/sold lấy thật từ averageRating/reviewCount/soldCount (AutoMapper tính trên
+// bảng Reviews/OrderItems).
 function adaptProduct(dto) {
   const image = dto.imageUrl || PLACEHOLDER_IMAGE;
   return {
@@ -21,9 +23,9 @@ function adaptProduct(dto) {
     discount: 0,
     image,
     images: [image],
-    rating: 0,
-    ratingCount: 0,
-    sold: 0,
+    rating: dto.averageRating ?? 0,
+    ratingCount: dto.reviewCount ?? 0,
+    sold: dto.soldCount ?? 0,
     stock: dto.stock,
   };
 }
@@ -32,7 +34,8 @@ function applySort(items, sort) {
   if (sort === 'price-asc') return [...items].sort((a, b) => a.price - b.price);
   if (sort === 'price-desc') return [...items].sort((a, b) => b.price - a.price);
   if (sort === 'newest') return [...items].reverse();
-  return items; // 'popular' — backend không có cột lượt bán, giữ nguyên thứ tự server trả về
+  if (sort === 'popular') return [...items].sort((a, b) => b.sold - a.sold);
+  return items;
 }
 
 export async function getProducts({

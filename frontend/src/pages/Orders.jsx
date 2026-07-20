@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getOrders, cancelSubOrder, confirmReceived } from '../api/orders';
+import { canReviewProduct } from '../api/reviews';
 import { formatDate, formatPrice } from '../utils/format';
 import { STATUS_COLORS, STATUS_LABELS } from '../utils/orderStatus';
 import OrderListSkeleton from '../components/OrderListSkeleton';
+import ReviewForm from '../components/ReviewForm';
 import './Orders.css';
 
 const ITEM_PLACEHOLDER = 'https://picsum.photos/seed/vendra-order-item/80';
@@ -12,12 +14,29 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingKey, setCancellingKey] = useState(null);
+  const [canReviewMap, setCanReviewMap] = useState({});
+  const [openReviewProductId, setOpenReviewProductId] = useState(null);
 
   function load() {
     setLoading(true);
     getOrders().then((data) => {
       setOrders(data);
       setLoading(false);
+      loadCanReviewMap(data);
+    });
+  }
+
+  // Chỉ hiện nút "Đánh Giá" cho sản phẩm đã giao và chưa được chính khách này đánh giá.
+  function loadCanReviewMap(data) {
+    const productIds = new Set();
+    data.forEach((order) =>
+      order.subOrders
+        .filter((sub) => sub.status === 'delivered')
+        .forEach((sub) => sub.items.forEach((item) => productIds.add(item.productId)))
+    );
+
+    Promise.all([...productIds].map((id) => canReviewProduct(id).then((can) => [id, can]))).then((results) => {
+      setCanReviewMap(Object.fromEntries(results));
     });
   }
 
@@ -48,6 +67,11 @@ export default function Orders() {
     } finally {
       setCancellingKey(null);
     }
+  }
+
+  function handleReviewed(productId) {
+    setOpenReviewProductId(null);
+    setCanReviewMap((m) => ({ ...m, [productId]: false }));
   }
 
   if (loading) return <div className="skeleton-page container"><OrderListSkeleton /></div>;
@@ -119,6 +143,37 @@ export default function Orders() {
                     >
                       {cancellingKey === `${order.id}-${sub.shopId}` ? 'Đang xác nhận...' : 'Đã Nhận Được Hàng'}
                     </button>
+                  </div>
+                )}
+                {sub.status === 'delivered' && (
+                  <div className="orders-suborder__reviews">
+                    {sub.items
+                      .filter((item) => canReviewMap[item.productId] !== false)
+                      .map((item) => (
+                        <div key={item.productId} className="orders-suborder__review-slot">
+                          <div className="orders-suborder__actions">
+                            <button
+                              type="button"
+                              className="btn btn-outline"
+                              onClick={() =>
+                                setOpenReviewProductId(
+                                  openReviewProductId === item.productId ? null : item.productId
+                                )
+                              }
+                            >
+                              Đánh Giá "{item.productName}"
+                            </button>
+                          </div>
+                          {openReviewProductId === item.productId && (
+                            <div className="orders-suborder__review-form">
+                              <ReviewForm
+                                productId={item.productId}
+                                onSubmitted={() => handleReviewed(item.productId)}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>

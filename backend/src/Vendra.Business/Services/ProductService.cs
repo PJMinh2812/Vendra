@@ -1,3 +1,5 @@
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
@@ -11,12 +13,14 @@ public class ProductService : IProductService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMemoryCache _cache;
+    private readonly IMapper _mapper;
     private static CancellationTokenSource _cacheTokenSource = new();
 
-    public ProductService(IUnitOfWork unitOfWork, IMemoryCache cache)
+    public ProductService(IUnitOfWork unitOfWork, IMemoryCache cache, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _cache = cache;
+        _mapper = mapper;
     }
 
     public async Task<PagedResultDto<ProductDto>> GetAllAsync(ProductQueryDto query)
@@ -85,19 +89,7 @@ public class ProductService : IProductService
         var items = await orderedQuery
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                Stock = p.Stock,
-                ImageUrl = p.ImageUrl,
-                CategoryId = p.CategoryId,
-                CategoryName = p.Category.Name,
-                ShopId = p.ShopId,
-                ShopName = p.Shop.Name
-            })
+            .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
         return new PagedResultDto<ProductDto>
@@ -111,10 +103,10 @@ public class ProductService : IProductService
 
     public async Task<ProductDto?> GetByIdAsync(int id)
     {
-        var product = await _unitOfWork.Repository<Product>()
-            .GetByIdAsync(id, p => p.Category, p => p.Shop);
-
-        return product is null ? null : MapToDto(product);
+        return await _unitOfWork.Repository<Product>().Query()
+            .Where(p => p.Id == id)
+            .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<ProductDto> CreateAsync(string ownerUserId, CreateProductDto dto)
@@ -141,12 +133,12 @@ public class ProductService : IProductService
         await _unitOfWork.Repository<Product>().AddAsync(product);
         await _unitOfWork.SaveChangesAsync();
 
-        var created = await _unitOfWork.Repository<Product>()
-            .GetByIdAsync(product.Id, p => p.Category, p => p.Shop);
-
         InvalidateCatalogCache();
 
-        return MapToDto(created!);
+        return await _unitOfWork.Repository<Product>().Query()
+            .Where(p => p.Id == product.Id)
+            .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+            .FirstAsync();
     }
 
     public async Task<ProductActionResult> UpdateAsync(string ownerUserId, int id, UpdateProductDto dto)
@@ -224,18 +216,4 @@ public class ProductService : IProductService
 
         return shop;
     }
-
-    private static ProductDto MapToDto(Product p) => new()
-    {
-        Id = p.Id,
-        Name = p.Name,
-        Description = p.Description,
-        Price = p.Price,
-        Stock = p.Stock,
-        ImageUrl = p.ImageUrl,
-        CategoryId = p.CategoryId,
-        CategoryName = p.Category.Name,
-        ShopId = p.ShopId,
-        ShopName = p.Shop.Name
-    };
 }

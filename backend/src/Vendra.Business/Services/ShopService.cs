@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Vendra.Business.DTOs;
 using Vendra.DataAccess.Models;
@@ -8,10 +9,12 @@ namespace Vendra.Business.Services;
 public class ShopService : IShopService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public ShopService(IUnitOfWork unitOfWork)
+    public ShopService(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     public async Task<ShopDto> RegisterAsync(string ownerUserId, CreateShopDto dto)
@@ -36,7 +39,7 @@ public class ShopService : IShopService
         await _unitOfWork.Repository<Shop>().AddAsync(shop);
         await _unitOfWork.SaveChangesAsync();
 
-        return ToDto(shop);
+        return _mapper.Map<ShopDto>(shop);
     }
 
     public async Task<ShopDto?> GetMineAsync(string ownerUserId)
@@ -44,7 +47,7 @@ public class ShopService : IShopService
         var shop = await _unitOfWork.Repository<Shop>().Query()
             .FirstOrDefaultAsync(s => s.OwnerUserId == ownerUserId);
 
-        return shop is null ? null : ToDto(shop);
+        return shop is null ? null : _mapper.Map<ShopDto>(shop);
     }
 
     public async Task<ShopDto?> GetByIdAsync(int id)
@@ -52,7 +55,7 @@ public class ShopService : IShopService
         var shop = await _unitOfWork.Repository<Shop>().Query()
             .FirstOrDefaultAsync(s => s.Id == id && s.Status == "Approved");
 
-        return shop is null ? null : ToDto(shop);
+        return shop is null ? null : _mapper.Map<ShopDto>(shop);
     }
 
     public async Task<List<ShopDto>> GetAllAsync(string? status)
@@ -65,7 +68,7 @@ public class ShopService : IShopService
         }
 
         var shops = await query.ToListAsync();
-        return shops.Select(ToDto).ToList();
+        return _mapper.Map<List<ShopDto>>(shops);
     }
 
     public async Task<bool> ApproveAsync(int shopId)
@@ -88,18 +91,5 @@ public class ShopService : IShopService
         _unitOfWork.Repository<Shop>().Update(shop);
         await _unitOfWork.SaveChangesAsync();
         return true;
-    }
-
-    private static ShopDto ToDto(Shop shop)
-    {
-        return new ShopDto
-        {
-            Id = shop.Id,
-            OwnerUserId = shop.OwnerUserId,
-            Name = shop.Name,
-            Description = shop.Description,
-            Status = shop.Status,
-            CreatedAt = shop.CreatedAt
-        };
     }
 }

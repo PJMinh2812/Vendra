@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Vendra.Business.DTOs;
 using Vendra.DataAccess.Models;
@@ -8,17 +9,19 @@ namespace Vendra.Business.Services;
 public class CategoryService : ICategoryService
 {
     private readonly IUnitOfWork _UnitOfWork;
+    private readonly IMapper _mapper;
 
-    public CategoryService(IUnitOfWork unitOfWork)
+    public CategoryService(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _UnitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     public async Task<List<CategoryDto>> GetAllAsync()
     {
         var categories = await _UnitOfWork.Repository<Category>().GetAllAsync();
 
-        return categories.Select(c => new CategoryDto {Id = c.Id, Name = c.Name}).ToList();
+        return _mapper.Map<List<CategoryDto>>(categories);
     }
 
     public async Task<CategoryDto> CreateAsync(CreateCategoryDto dto)
@@ -27,7 +30,7 @@ public class CategoryService : ICategoryService
         await _UnitOfWork.Repository<Category>().AddAsync(category);
         await _UnitOfWork.SaveChangesAsync();
 
-        return new CategoryDto { Id = category.Id, Name = category.Name };
+        return _mapper.Map<CategoryDto>(category);
     }
 
     public async Task<bool> UpdateAsync(int id, UpdateCategoryDto dto)

@@ -1,0 +1,38 @@
+.review-section {
+  padding: 24px;
+  margin-top: 16px;
+}
+
+.review-section h2 {
+  font-size: 16px;
+  margin: 0 0 16px;
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-item {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.review-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.review-item__header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.review-item__comment {
+  margin: 8px 0 0;
+  color: var(--color-text);
+  line-height: 1.5;
+}

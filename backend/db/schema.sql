@@ -99,3 +99,20 @@ CREATE TABLE Payments (
     CONSTRAINT UQ_Payments_OrderId UNIQUE (OrderId),
     CONSTRAINT CK_Payments_Amount CHECK (Amount > 0)
 );
+
+-- 9. Reviews ----------------------------------------------------------
+-- ReviewerName lưu snapshot (giống ProductName trong OrderItems) vì AspNetUsers nằm ở
+-- AppIdentityDbContext riêng, không join trực tiếp được từ VendraDbContext.
+CREATE TABLE Reviews (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    ProductId INT NOT NULL,
+    UserId NVARCHAR(450) NOT NULL,
+    ReviewerName NVARCHAR(200) NOT NULL,
+    Rating INT NOT NULL,
+    Comment NVARCHAR(1000) NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+
+    CONSTRAINT FK_Reviews_Products FOREIGN KEY (ProductId) REFERENCES Products(Id),
+    CONSTRAINT CK_Reviews_Rating CHECK (Rating BETWEEN 1 AND 5),
+    CONSTRAINT UQ_Reviews_User_Product UNIQUE (UserId, ProductId)
+);

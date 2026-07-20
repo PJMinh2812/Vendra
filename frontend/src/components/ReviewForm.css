@@ -1,0 +1,42 @@
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review-form__stars {
+  display: flex;
+  gap: 4px;
+}
+
+.review-form__star {
+  font-size: 26px;
+  line-height: 1;
+  color: #d5d5d5;
+  cursor: pointer;
+  transition: color 0.1s var(--ease);
+}
+
+.review-form__star.active {
+  color: var(--color-rating);
+}
+
+.review-form textarea {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  width: 100%;
+  resize: vertical;
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+
+.review-form textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.review-form button {
+  align-self: flex-start;
+}

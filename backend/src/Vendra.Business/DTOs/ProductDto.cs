@@ -12,5 +12,8 @@ public class ProductDto
     public string CategoryName {get; set; } = null!;
     public int ShopId {get; set; }
     public string ShopName {get; set; } = null!;
+    public double AverageRating {get; set; }
+    public int ReviewCount {get; set; }
+    public int SoldCount {get; set; }
 }
 

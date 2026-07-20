@@ -23,6 +23,8 @@ public partial class VendraDbContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
+    public virtual DbSet<Review> Reviews { get; set; }
+
     public virtual DbSet<Shop> Shops { get; set; }
 
     public virtual DbSet<SubOrder> SubOrders { get; set; }
@@ -120,6 +122,23 @@ public partial class VendraDbContext : DbContext
                 .HasForeignKey(d => d.ShopId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Products_Shops");
+        });
+
+        modelBuilder.Entity<Review>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Reviews__3214EC07BBF865F8");
+
+            entity.HasIndex(e => new { e.UserId, e.ProductId }, "UQ_Reviews_User_Product").IsUnique();
+
+            entity.Property(e => e.Comment).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.ReviewerName).HasMaxLength(200);
+            entity.Property(e => e.UserId).HasMaxLength(450);
+
+            entity.HasOne(d => d.Product).WithMany(p => p.Reviews)
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Reviews_Products");
         });
 
         modelBuilder.Entity<Shop>(entity =>
