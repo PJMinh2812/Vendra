@@ -14,6 +14,8 @@ export default function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role === 'Admin';
+  const isSeller = user?.role === 'Seller';
+  const isStorefront = !isAdmin && !isSeller;
 
   useEffect(() => {
     function onScroll() {
@@ -91,11 +93,11 @@ export default function Header() {
       </div>
 
       <div className="header__main container">
-        <Link to={isAdmin ? '/admin' : '/'} className="header__logo">
+        <Link to={isAdmin ? '/admin' : isSeller ? '/seller' : '/'} className="header__logo">
           Vendra
         </Link>
 
-        {!isAdmin && (
+        {isStorefront && (
           <>
             <form className="header__search" onSubmit={handleSearch}>
               <input

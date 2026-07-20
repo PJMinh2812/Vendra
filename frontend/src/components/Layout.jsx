@@ -12,6 +12,11 @@ export default function Layout() {
     return <Navigate to="/admin" replace />;
   }
 
+  // Seller chỉ sống trong khu /seller — không cho lạc vào trang mua sắm của khách.
+  if (user?.role === 'Seller' && !location.pathname.startsWith('/seller')) {
+    return <Navigate to="/seller" replace />;
+  }
+
   return (
     <>
       <Header />

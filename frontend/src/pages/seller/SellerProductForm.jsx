@@ -44,6 +44,22 @@ export default function SellerProductForm() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    if (!categoryId) {
+      setError('Vui lòng chọn danh mục');
+      return;
+    }
+    if (!name.trim()) {
+      setError('Vui lòng nhập tên sản phẩm');
+      return;
+    }
+    if (!price || Number(price) <= 0) {
+      setError('Vui lòng nhập giá hợp lệ');
+      return;
+    }
+    if (stock === '' || Number(stock) < 0) {
+      setError('Vui lòng nhập tồn kho hợp lệ');
+      return;
+    }
     setSubmitting(true);
     const dto = {
       categoryId: Number(categoryId),
@@ -71,16 +87,17 @@ export default function SellerProductForm() {
     <div className="skeleton-page dashboard-page">
       <div className="container">
         <h1>Kênh Người Bán</h1>
+        <p className="dashboard-page__subtitle">{isEdit ? 'Cập nhật thông tin sản phẩm' : 'Thêm sản phẩm mới vào shop'}</p>
         <DashboardTabs tabs={SELLER_TABS} />
 
         {loading ? (
           <p className="text-muted">Đang tải...</p>
         ) : (
-          <form className="dashboard-form card" onSubmit={handleSubmit}>
+          <form className="dashboard-form card" onSubmit={handleSubmit} noValidate>
             <h2>{isEdit ? 'Sửa Sản Phẩm' : 'Thêm Sản Phẩm'}</h2>
             <label>
               Danh mục
-              <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+              <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
                 <option value="" disabled>
                   Chọn danh mục
                 </option>
@@ -93,7 +110,7 @@ export default function SellerProductForm() {
             </label>
             <label>
               Tên sản phẩm
-              <input value={name} onChange={(e) => setName(e.target.value)} required />
+              <input value={name} onChange={(e) => setName(e.target.value)} />
             </label>
             <label>
               Mô tả
@@ -101,11 +118,11 @@ export default function SellerProductForm() {
             </label>
             <label>
               Giá (₫)
-              <input type="number" min="0.01" step="1000" value={price} onChange={(e) => setPrice(e.target.value)} required />
+              <input type="number" min="0" step="1000" value={price} onChange={(e) => setPrice(e.target.value)} />
             </label>
             <label>
               Tồn kho
-              <input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} required />
+              <input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} />
             </label>
             <label>
               Link ảnh (URL)

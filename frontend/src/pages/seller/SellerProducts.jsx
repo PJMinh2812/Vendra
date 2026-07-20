@@ -38,6 +38,7 @@ export default function SellerProducts() {
     <div className="skeleton-page dashboard-page">
       <div className="container">
         <h1>Kênh Người Bán</h1>
+        <p className="dashboard-page__subtitle">Quản lý danh sách sản phẩm đang bán</p>
         <DashboardTabs tabs={SELLER_TABS} />
 
         {shop === undefined || loading ? (
@@ -55,9 +56,10 @@ export default function SellerProducts() {
               </Link>
             </div>
             {products.length === 0 ? (
-              <p className="text-muted" style={{ padding: '0 16px 16px' }}>
-                Bạn chưa có sản phẩm nào.
-              </p>
+              <div className="dashboard-empty">
+                <span className="dashboard-empty__icon">📦</span>
+                <p>Bạn chưa có sản phẩm nào.</p>
+              </div>
             ) : (
               <table className="dashboard-table">
                 <thead>
@@ -79,11 +81,18 @@ export default function SellerProducts() {
                       <td>{formatPrice(p.price)}</td>
                       <td>{p.stock}</td>
                       <td>
-                        <Link to={`/seller/products/${p.id}/edit`}>Sửa</Link>
-                        {' · '}
-                        <button type="button" className="header__link-btn" onClick={() => handleDelete(p.id)}>
-                          Xóa
-                        </button>
+                        <div className="dashboard-table__actions">
+                          <Link to={`/seller/products/${p.id}/edit`} className="dashboard-table__action">
+                            Sửa
+                          </Link>
+                          <button
+                            type="button"
+                            className="dashboard-table__action dashboard-table__action--danger"
+                            onClick={() => handleDelete(p.id)}
+                          >
+                            Xóa
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

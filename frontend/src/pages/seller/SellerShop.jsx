@@ -25,6 +25,10 @@ export default function SellerShop() {
   async function handleRegister(e) {
     e.preventDefault();
     setError('');
+    if (!name.trim()) {
+      setError('Vui lòng nhập tên shop');
+      return;
+    }
     setSubmitting(true);
     try {
       const created = await registerShop({ name, description });
@@ -40,16 +44,17 @@ export default function SellerShop() {
     <div className="skeleton-page dashboard-page">
       <div className="container">
         <h1>Kênh Người Bán</h1>
+        <p className="dashboard-page__subtitle">Quản lý shop, sản phẩm và đơn hàng của bạn</p>
         <DashboardTabs tabs={SELLER_TABS} />
 
         {shop === undefined && <p className="text-muted">Đang tải...</p>}
 
         {shop === null && (
-          <form className="dashboard-form card" onSubmit={handleRegister}>
+          <form className="dashboard-form card" onSubmit={handleRegister} noValidate>
             <p className="text-muted">Bạn chưa có shop — đăng ký để bắt đầu bán hàng.</p>
             <label>
               Tên shop
-              <input value={name} onChange={(e) => setName(e.target.value)} required />
+              <input value={name} onChange={(e) => setName(e.target.value)} />
             </label>
             <label>
               Mô tả

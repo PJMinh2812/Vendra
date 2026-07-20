@@ -46,12 +46,16 @@ export default function SellerOrders() {
     <div className="skeleton-page dashboard-page">
       <div className="container">
         <h1>Kênh Người Bán</h1>
+        <p className="dashboard-page__subtitle">Theo dõi và xử lý đơn hàng của shop</p>
         <DashboardTabs tabs={SELLER_TABS} />
 
         {loading ? (
           <p className="text-muted">Đang tải...</p>
         ) : orders.length === 0 ? (
-          <p className="text-muted">Chưa có đơn hàng nào.</p>
+          <div className="dashboard-empty">
+            <span className="dashboard-empty__icon">🧾</span>
+            <p>Chưa có đơn hàng nào.</p>
+          </div>
         ) : (
           <>
             {orders.map((sub) => {
@@ -60,7 +64,13 @@ export default function SellerOrders() {
                 <div key={sub.orderId} className="dashboard-order-card card">
                   <div className="dashboard-order-card__header">
                     <span>Đơn hàng #{sub.orderId}</span>
-                    <span style={{ color: STATUS_COLORS[sub.status] }}>
+                    <span
+                      className="status-pill"
+                      style={{
+                        color: STATUS_COLORS[sub.status],
+                        backgroundColor: `${STATUS_COLORS[sub.status]}1a`,
+                      }}
+                    >
                       {STATUS_LABELS[sub.status] ?? sub.status}
                     </span>
                   </div>
