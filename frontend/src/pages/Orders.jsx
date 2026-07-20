@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getOrders, cancelSubOrder } from '../api/orders';
+import { getOrders, cancelSubOrder, confirmReceived } from '../api/orders';
 import { formatDate, formatPrice } from '../utils/format';
 import { STATUS_COLORS, STATUS_LABELS } from '../utils/orderStatus';
 import OrderListSkeleton from '../components/OrderListSkeleton';
@@ -30,6 +30,18 @@ export default function Orders() {
     setCancellingKey(`${orderId}-${shopId}`);
     try {
       await cancelSubOrder(orderId, shopId);
+      load();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setCancellingKey(null);
+    }
+  }
+
+  async function handleConfirmReceived(orderId, shopId) {
+    setCancellingKey(`${orderId}-${shopId}`);
+    try {
+      await confirmReceived(orderId, shopId);
       load();
     } catch (err) {
       alert(err.message);
@@ -94,6 +106,18 @@ export default function Orders() {
                       onClick={() => handleCancel(order.id, sub.shopId)}
                     >
                       {cancellingKey === `${order.id}-${sub.shopId}` ? 'Đang hủy...' : 'Hủy Đơn'}
+                    </button>
+                  </div>
+                )}
+                {sub.status === 'shipping' && (
+                  <div className="orders-suborder__actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={cancellingKey === `${order.id}-${sub.shopId}`}
+                      onClick={() => handleConfirmReceived(order.id, sub.shopId)}
+                    >
+                      {cancellingKey === `${order.id}-${sub.shopId}` ? 'Đang xác nhận...' : 'Đã Nhận Được Hàng'}
                     </button>
                   </div>
                 )}

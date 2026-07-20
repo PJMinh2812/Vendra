@@ -94,4 +94,18 @@ public class OrdersController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("{id:int}/shops/{shopId:int}/confirm-received")]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> ConfirmReceived(int id, int shopId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var success = await _orderService.ConfirmReceivedAsync(userId, id, shopId);
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }

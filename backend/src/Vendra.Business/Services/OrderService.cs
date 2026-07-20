@@ -302,17 +302,19 @@ public class OrderService : IOrderService
         return true;
     }
 
-    // Chỉ cho phép đi tiếp đúng 1 bước trong luồng Pending → Shipping → Delivered — không cho
-    // nhảy cóc (Pending thẳng lên Delivered) hay đi lùi, và Cancelled luôn là trạng thái cuối
-    // (chỉ Customer tự hủy được, xem CancelSubOrderAsync).
-    private static readonly Dictionary<string, string> NextStatus = new()
-    {
-        ["Pending"] = "Shipping",
-        ["Shipping"] = "Delivered",
-    };
-
+    // Luồng Pending → Shipping → Delivered chia theo đúng người thực sự biết sự thật ở mỗi bước:
+    // Seller biết khi nào mình đã đóng gói/giao cho đơn vị vận chuyển (Pending → Shipping,
+    // UpdateSubOrderStatusAsync bên dưới); chỉ Customer mới biết khi nào hàng thực sự tới tay
+    // mình (Shipping → Delivered, ConfirmReceivedAsync) — Seller không tự ý đánh dấu Delivered
+    // thay khách được. Cancelled luôn là trạng thái cuối, chỉ Customer tự hủy lúc còn Pending
+    // (xem CancelSubOrderAsync).
     public async Task<bool> UpdateSubOrderStatusAsync(string sellerUserId, int orderId, string newStatus)
     {
+        if (newStatus != "Shipping")
+        {
+            throw new InvalidOperationException("Seller chỉ có thể chuyển đơn sang trạng thái 'Shipping'.");
+        }
+
         var shop = await _unitOfWork.Repository<Shop>().Query()
             .FirstOrDefaultAsync(s => s.OwnerUserId == sellerUserId);
 
@@ -329,12 +331,40 @@ public class OrderService : IOrderService
             return false;
         }
 
-        if (!NextStatus.TryGetValue(subOrder.Status, out var allowedNext) || newStatus != allowedNext)
+        if (subOrder.Status != "Pending")
         {
-            throw new InvalidOperationException($"Không thể chuyển đơn từ '{subOrder.Status}' sang '{newStatus}'.");
+            throw new InvalidOperationException($"Không thể chuyển đơn từ '{subOrder.Status}' sang 'Shipping'.");
         }
 
-        subOrder.Status = newStatus;
+        subOrder.Status = "Shipping";
+        _unitOfWork.Repository<SubOrder>().Update(subOrder);
+        await _unitOfWork.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> ConfirmReceivedAsync(string customerUserId, int orderId, int shopId)
+    {
+        var order = await _unitOfWork.Repository<Order>().Query()
+            .Include(o => o.SubOrders)
+            .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerUserId == customerUserId);
+
+        if (order is null)
+        {
+            return false;
+        }
+
+        var subOrder = order.SubOrders.FirstOrDefault(so => so.ShopId == shopId);
+        if (subOrder is null)
+        {
+            return false;
+        }
+
+        if (subOrder.Status != "Shipping")
+        {
+            throw new InvalidOperationException($"Không thể xác nhận đã nhận hàng khi đơn đang ở trạng thái '{subOrder.Status}'.");
+        }
+
+        subOrder.Status = "Delivered";
         _unitOfWork.Repository<SubOrder>().Update(subOrder);
         await _unitOfWork.SaveChangesAsync();
         return true;

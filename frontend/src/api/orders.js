@@ -84,6 +84,10 @@ export async function cancelSubOrder(orderId, shopId) {
   return apiFetch(`/orders/${orderId}/shops/${shopId}/cancel`, { method: 'PUT' });
 }
 
+export async function confirmReceived(orderId, shopId) {
+  return apiFetch(`/orders/${orderId}/shops/${shopId}/confirm-received`, { method: 'PUT' });
+}
+
 // SellerSubOrderDto phẳng hơn OrderDto (không có shopId/shopName vì luôn ngầm định là shop của
 // người gọi) — dùng lại adaptOrderItem nhưng map riêng cấp ngoài.
 function adaptSellerSubOrder(sub) {

@@ -12,4 +12,5 @@ public interface IOrderService
     Task<PagedResultDto<OrderDto>> GetAllOrdersAsync(OrderQueryDto query);
     Task<bool> CancelSubOrderAsync(string customerUserId, int orderId, int shopId);
     Task<bool> UpdateSubOrderStatusAsync(string sellerUserId, int orderId, string newStatus);
+    Task<bool> ConfirmReceivedAsync(string customerUserId, int orderId, int shopId);
 }

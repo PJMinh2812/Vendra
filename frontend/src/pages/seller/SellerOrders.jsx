@@ -8,12 +8,8 @@ import { SELLER_TABS } from './tabs';
 import './Seller.css';
 import '../Orders.css';
 
-// sub.status ở frontend luôn viết thường (xem adaptSellerSubOrder), nhưng backend lưu đúng
-// PascalCase ("Pending"/"Shipping"/"Delivered") và so khớp phân biệt hoa-thường — phải gửi
-// đúng giá trị này lên, không phải bản viết thường dùng để hiển thị.
 const NEXT_ACTION = {
   pending: { label: 'Xác Nhận Đơn', nextStatus: 'Shipping' },
-  shipping: { label: 'Đã Giao Xong', nextStatus: 'Delivered' },
 };
 
 export default function SellerOrders() {
