@@ -42,15 +42,8 @@ namespace Vendra.Api.Controllers
         public async Task<IActionResult> Create(CreateProductDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            try
-            {
-                var created = await _productService.CreateAsync(userId, dto);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var created = await _productService.CreateAsync(userId, dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
         [HttpPut("{id}")]

@@ -23,15 +23,8 @@ public class ShopsController : ControllerBase
     public async Task<IActionResult> Register(CreateShopDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        try
-        {
-            var result = await _shopService.RegisterAsync(userId, dto);
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _shopService.RegisterAsync(userId, dto);
+        return Ok(result);
     }
 
     [HttpGet("mine")]

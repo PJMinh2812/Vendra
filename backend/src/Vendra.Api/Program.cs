@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using Vendra.Api.Middleware;
 using Vendra.Business;
 using Vendra.Business.Settings;
 using Vendra.DataAccess;
@@ -57,6 +58,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {

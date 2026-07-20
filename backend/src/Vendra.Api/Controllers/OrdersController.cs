@@ -23,15 +23,8 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> Checkout(CreateOrderDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        try
-        {
-            var order = await _orderService.CheckoutAsync(userId, dto);
-            return StatusCode(StatusCodes.Status201Created, order);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var order = await _orderService.CheckoutAsync(userId, dto);
+        return StatusCode(StatusCodes.Status201Created, order);
     }
 
     [HttpGet]
@@ -62,15 +55,8 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> GetShopOrders([FromQuery] OrderQueryDto query)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        try
-        {
-            var result = await _orderService.GetShopOrdersAsync(userId, query);
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var result = await _orderService.GetShopOrdersAsync(userId, query);
+        return Ok(result);
     }
 
     [HttpGet("all")]

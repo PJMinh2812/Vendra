@@ -30,35 +30,21 @@ public class CartController : ControllerBase
     public async Task<IActionResult> AddItem(AddCartItemDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        try
-        {
-            var item = await _cartService.AddItemAsync(userId, dto);
-            return Ok(item);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var item = await _cartService.AddItemAsync(userId, dto);
+        return Ok(item);
     }
 
     [HttpPut("{productId}")]
     public async Task<IActionResult> UpdateItem(int productId, UpdateCartItemDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        try
+        var success = await _cartService.UpdateItemAsync(userId, productId, dto);
+        if (!success)
         {
-            var success = await _cartService.UpdateItemAsync(userId, productId, dto);
-            if (!success)
-            {
-                return NotFound();
-            }
+            return NotFound();
+        }
 
-            return NoContent();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        return NoContent();
     }
 
     [HttpDelete("{productId}")]
