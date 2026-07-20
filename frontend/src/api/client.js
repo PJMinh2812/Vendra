@@ -4,7 +4,7 @@
 // (chúng chỉ import từ src/api/*.js).
 
 export const USE_MOCK = false;
-export const BASE_URL = 'http://localhost:5270/api';
+export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5270/api';
 
 const ACCESS_TOKEN_KEY = 'vendra_access_token';
 const REFRESH_TOKEN_KEY = 'vendra_refresh_token';
