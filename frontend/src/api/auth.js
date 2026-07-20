@@ -69,7 +69,13 @@ export function logout() {
   clearTokens();
 }
 
-// Backend chưa có endpoint quên/đặt lại mật khẩu hay đăng nhập Google — giữ mock cho 2 hàm này
+export async function loginWithGoogle(idToken) {
+  const result = await apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) });
+  setTokens(result);
+  return { user: buildUserFromToken(result.accessToken), accessToken: result.accessToken };
+}
+
+// Backend chưa có endpoint quên/đặt lại mật khẩu — giữ mock cho 2 hàm này
 // (không rẽ theo USE_MOCK) để UI không vỡ, không phải vì quên nối API thật.
 
 export async function forgotPassword({ email }) {
@@ -86,12 +92,4 @@ export async function resetPassword({ password }) {
     throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
   }
   return { message: 'Đổi mật khẩu thành công' };
-}
-
-export async function loginWithGoogle() {
-  await delay(500);
-  return {
-    user: { id: 'user-google-1', email: 'vendra.user@gmail.com', fullName: 'Vendra User', role: 'Customer' },
-    accessToken: 'mock-google-access-token',
-  };
 }

@@ -42,4 +42,11 @@ public class AuthController : ControllerBase
         await _authService.RevokeAsync(dto);
         return NoContent();
     }
+
+    [HttpPost("google")]
+    public async Task<IActionResult> Google(GoogleLoginDto dto)
+    {
+        var result = await _authService.GoogleLoginAsync(dto);
+        return Ok(result);
+    }
 }

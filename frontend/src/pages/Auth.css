@@ -135,28 +135,8 @@
   background: var(--color-border);
 }
 
-.btn-google {
+.google-auth-btn {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
   width: 100%;
-  border: 1px solid var(--color-border);
-  background: #fff;
-  color: var(--color-text);
-  border-radius: var(--radius-pill);
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  transition: box-shadow 0.15s var(--ease), border-color 0.15s var(--ease);
-}
-
-.btn-google:hover:not(:disabled) {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-color: #d0d0d5;
-}
-
-.btn-google:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }

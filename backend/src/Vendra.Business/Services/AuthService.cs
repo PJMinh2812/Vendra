@@ -1,3 +1,4 @@
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -15,17 +16,20 @@ public class AuthService : IAuthService
     private readonly ITokenService _tokenService;
     private readonly AppIdentityDbContext _identityDbContext;
     private readonly JwtSettings _jwtSettings;
+    private readonly GoogleSettings _googleSettings;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
         ITokenService tokenService,
         AppIdentityDbContext identityDbContext,
-        IOptions<JwtSettings> jwtSettings)
+        IOptions<JwtSettings> jwtSettings,
+        IOptions<GoogleSettings> googleSettings)
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _identityDbContext = identityDbContext;
         _jwtSettings = jwtSettings.Value;
+        _googleSettings = googleSettings.Value;
     }
 
     public async Task<AuthResultDto> RegisterAsync(RegisterDto dto)
@@ -107,6 +111,45 @@ public class AuthService : IAuthService
             storedToken.Revoked = true;
             await _identityDbContext.SaveChangesAsync();
         }
+    }
+
+    public async Task<AuthResultDto> GoogleLoginAsync(GoogleLoginDto dto)
+    {
+        GoogleJsonWebSignature.Payload payload;
+        try
+        {
+            payload = await GoogleJsonWebSignature.ValidateAsync(dto.IdToken, new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { _googleSettings.ClientId },
+            });
+        }
+        catch (InvalidJwtException)
+        {
+            throw new UnauthorizedAccessException("Google token không hợp lệ hoặc đã hết hạn.");
+        }
+
+        var user = await _userManager.FindByEmailAsync(payload.Email);
+        if (user is null)
+        {
+            user = new ApplicationUser
+            {
+                UserName = payload.Email,
+                Email = payload.Email,
+                FullName = payload.Name ?? payload.Email,
+                EmailConfirmed = true,
+            };
+
+            var result = await _userManager.CreateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException(errors);
+            }
+
+            await _userManager.AddToRoleAsync(user, "Customer");
+        }
+
+        return await GenerateAuthResultAsync(user);
     }
 
     private async Task<AuthResultDto> GenerateAuthResultAsync(ApplicationUser user)

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import GoogleIcon from '../components/GoogleIcon';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 import './Auth.css';
 
 export default function Register() {
@@ -13,7 +13,6 @@ export default function Register() {
   const [role, setRole] = useState('Customer');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -29,16 +28,15 @@ export default function Register() {
     }
   }
 
-  async function handleGoogleRegister() {
+  async function handleGoogleCredential(idToken) {
     setError('');
-    setGoogleSubmitting(true);
     try {
-      await loginWithGoogle();
-      navigate('/');
+      const loggedIn = await loginWithGoogle(idToken);
+      if (loggedIn.role === 'Admin') navigate('/admin');
+      else if (loggedIn.role === 'Seller') navigate('/seller');
+      else navigate('/');
     } catch (err) {
       setError(err.message);
-    } finally {
-      setGoogleSubmitting(false);
     }
   }
 
@@ -83,15 +81,7 @@ export default function Register() {
           <span>Hoặc</span>
         </div>
 
-        <button
-          type="button"
-          className="btn-google"
-          onClick={handleGoogleRegister}
-          disabled={googleSubmitting}
-        >
-          <GoogleIcon />
-          {googleSubmitting ? 'Đang đăng ký...' : 'Đăng ký bằng Google'}
-        </button>
+        <GoogleAuthButton onSuccess={handleGoogleCredential} onError={setError} />
 
         <p className="auth-switch">
           Đã có tài khoản? <Link to="/login">Đăng nhập</Link>

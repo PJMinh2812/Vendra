@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import GoogleIcon from '../components/GoogleIcon';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 import './Auth.css';
 
 const DEMO_ACCOUNTS = [
@@ -17,7 +17,6 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -25,7 +24,9 @@ export default function Login() {
     setSubmitting(true);
     try {
       const loggedIn = await login({ email, password });
-      navigate(loggedIn.role === 'Admin' ? '/admin' : '/');
+      if (loggedIn.role === 'Admin') navigate('/admin');
+      else if (loggedIn.role === 'Seller') navigate('/seller');
+      else navigate('/');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -33,16 +34,15 @@ export default function Login() {
     }
   }
 
-  async function handleGoogleLogin() {
+  async function handleGoogleCredential(idToken) {
     setError('');
-    setGoogleSubmitting(true);
     try {
-      await loginWithGoogle();
-      navigate('/');
+      const loggedIn = await loginWithGoogle(idToken);
+      if (loggedIn.role === 'Admin') navigate('/admin');
+      else if (loggedIn.role === 'Seller') navigate('/seller');
+      else navigate('/');
     } catch (err) {
       setError(err.message);
-    } finally {
-      setGoogleSubmitting(false);
     }
   }
 
@@ -74,15 +74,7 @@ export default function Login() {
           <span>Hoặc</span>
         </div>
 
-        <button
-          type="button"
-          className="btn-google"
-          onClick={handleGoogleLogin}
-          disabled={googleSubmitting}
-        >
-          <GoogleIcon />
-          {googleSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập bằng Google'}
-        </button>
+        <GoogleAuthButton onSuccess={handleGoogleCredential} onError={setError} />
 
         <p className="auth-switch">
           Chưa có tài khoản? <Link to="/register">Đăng ký</Link>

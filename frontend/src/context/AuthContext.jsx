@@ -30,8 +30,8 @@ export function AuthProvider({ children }) {
     return result.user;
   }
 
-  async function loginWithGoogle() {
-    const result = await authApi.loginWithGoogle();
+  async function loginWithGoogle(idToken) {
+    const result = await authApi.loginWithGoogle(idToken);
     setUser(result.user);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(result.user));
     return result.user;
