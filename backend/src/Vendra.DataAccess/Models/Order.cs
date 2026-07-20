@@ -15,5 +15,7 @@ public partial class Order
 
     public DateTime CreatedAt { get; set; }
 
+    public virtual Payment? Payment { get; set; }
+
     public virtual ICollection<SubOrder> SubOrders { get; set; } = new List<SubOrder>();
 }

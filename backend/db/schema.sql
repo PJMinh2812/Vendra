@@ -83,3 +83,19 @@ CREATE TABLE OrderItems (
     CONSTRAINT FK_OrderItems_Products FOREIGN KEY (ProductId) REFERENCES Products(Id),
     CONSTRAINT CK_OrderItems_Quantity CHECK (Quantity > 0)
 );
+
+-- 8. Payments -------------------------------------------------------
+CREATE TABLE Payments (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    OrderId INT NOT NULL,
+    Method NVARCHAR(20) NOT NULL,
+    Status NVARCHAR(20) NOT NULL DEFAULT 'Pending',
+    TransactionId NVARCHAR(100) NULL,
+    Amount DECIMAL(18,2) NOT NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    PaidAt DATETIME2 NULL,
+
+    CONSTRAINT FK_Payments_Orders FOREIGN KEY (OrderId) REFERENCES Orders(Id),
+    CONSTRAINT UQ_Payments_OrderId UNIQUE (OrderId),
+    CONSTRAINT CK_Payments_Amount CHECK (Amount > 0)
+);

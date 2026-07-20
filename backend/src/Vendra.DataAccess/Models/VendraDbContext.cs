@@ -19,6 +19,8 @@ public partial class VendraDbContext : DbContext
 
     public virtual DbSet<OrderItem> OrderItems { get; set; }
 
+    public virtual DbSet<Payment> Payments { get; set; }
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<Shop> Shops { get; set; }
@@ -74,6 +76,26 @@ public partial class VendraDbContext : DbContext
                 .HasForeignKey(d => d.SubOrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_OrderItems_SubOrders");
+        });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Payments__3214EC072B9D45DC");
+
+            entity.HasIndex(e => e.OrderId, "UQ_Payments_OrderId").IsUnique();
+
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.Method).HasMaxLength(20);
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("Pending");
+            entity.Property(e => e.TransactionId).HasMaxLength(100);
+
+            entity.HasOne(d => d.Order).WithOne(p => p.Payment)
+                .HasForeignKey<Payment>(d => d.OrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Payments_Orders");
         });
 
         modelBuilder.Entity<Product>(entity =>

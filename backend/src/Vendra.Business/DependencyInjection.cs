@@ -14,7 +14,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IShopService, ShopService>();
         services.AddScoped<ICartService, CartService>();
-    
+        services.AddScoped<IOrderService, OrderService>();
+        services.AddHttpClient<IMoMoService, MoMoService>();
+
         return services;
     }
 }
