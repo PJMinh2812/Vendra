@@ -10,7 +10,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
-  const { totalCount, items } = useCart();
+  const { totalCount, items, clearCart } = useCart();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -71,6 +71,8 @@ export default function Header() {
                       onClick={() => {
                         setUserMenuOpen(false);
                         logout();
+                        clearCart();
+                        navigate('/login');
                       }}
                     >
                       Đăng xuất

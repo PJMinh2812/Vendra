@@ -91,6 +91,10 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.filter((i) => !i.selected));
   }
 
+  function clearCart() {
+    setItems([]);
+  }
+
   const enriched = items
     .map((i) => ({ ...i, product: productsById[i.productId] }))
     .filter((i) => i.product);
@@ -118,6 +122,7 @@ export function CartProvider({ children }) {
     removeItem,
     toggleSelected,
     clearSelected,
+    clearCart,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
