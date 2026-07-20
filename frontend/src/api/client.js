@@ -8,6 +8,10 @@ export const BASE_URL = 'http://localhost:5270/api';
 
 const ACCESS_TOKEN_KEY = 'vendra_access_token';
 const REFRESH_TOKEN_KEY = 'vendra_refresh_token';
+// Trùng khóa với CartContext (STORAGE_KEY) — không import chéo để tránh vòng lặp
+// client -> CartContext -> api/products -> client.
+const CART_KEY = 'vendra_cart';
+const USER_KEY = 'vendra_user';
 
 export function getAccessToken() {
   return localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -25,6 +29,8 @@ export function setTokens({ accessToken, refreshToken }) {
 export function clearTokens() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(CART_KEY);
+  localStorage.removeItem(USER_KEY);
 }
 
 // Giả lập độ trễ mạng để UI (loading state) trông giống thật (chỉ dùng ở nhánh mock).
