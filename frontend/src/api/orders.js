@@ -102,6 +102,12 @@ export async function getShopOrders(page = 1) {
   return { items: res.items.map(adaptSellerSubOrder), totalPages: Math.max(1, Math.ceil(res.totalCount / res.pageSize)) };
 }
 
+// Luồng cố định: pending -> shipping -> delivered. Backend từ chối (400) nếu
+// không đúng bước kế tiếp — Seller không thể nhảy cóc hay đi lùi.
+export async function updateSubOrderStatus(orderId, status) {
+  return apiFetch(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
+}
+
 // --- Admin Dashboard ---
 export async function getAllOrders(page = 1) {
   const res = await apiFetch(`/orders/all?page=${page}&pageSize=20`);

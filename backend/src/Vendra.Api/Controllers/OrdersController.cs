@@ -80,4 +80,18 @@ public class OrdersController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("{id:int}/status")]
+    [Authorize(Roles = "Seller")]
+    public async Task<IActionResult> UpdateStatus(int id, UpdateSubOrderStatusDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var success = await _orderService.UpdateSubOrderStatusAsync(userId, id, dto.Status);
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }

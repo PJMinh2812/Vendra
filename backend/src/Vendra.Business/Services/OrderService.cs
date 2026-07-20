@@ -302,6 +302,44 @@ public class OrderService : IOrderService
         return true;
     }
 
+    // Chỉ cho phép đi tiếp đúng 1 bước trong luồng Pending → Shipping → Delivered — không cho
+    // nhảy cóc (Pending thẳng lên Delivered) hay đi lùi, và Cancelled luôn là trạng thái cuối
+    // (chỉ Customer tự hủy được, xem CancelSubOrderAsync).
+    private static readonly Dictionary<string, string> NextStatus = new()
+    {
+        ["Pending"] = "Shipping",
+        ["Shipping"] = "Delivered",
+    };
+
+    public async Task<bool> UpdateSubOrderStatusAsync(string sellerUserId, int orderId, string newStatus)
+    {
+        var shop = await _unitOfWork.Repository<Shop>().Query()
+            .FirstOrDefaultAsync(s => s.OwnerUserId == sellerUserId);
+
+        if (shop is null)
+        {
+            throw new InvalidOperationException("Bạn chưa có shop.");
+        }
+
+        var subOrder = await _unitOfWork.Repository<SubOrder>().Query()
+            .FirstOrDefaultAsync(so => so.OrderId == orderId && so.ShopId == shop.Id);
+
+        if (subOrder is null)
+        {
+            return false;
+        }
+
+        if (!NextStatus.TryGetValue(subOrder.Status, out var allowedNext) || newStatus != allowedNext)
+        {
+            throw new InvalidOperationException($"Không thể chuyển đơn từ '{subOrder.Status}' sang '{newStatus}'.");
+        }
+
+        subOrder.Status = newStatus;
+        _unitOfWork.Repository<SubOrder>().Update(subOrder);
+        await _unitOfWork.SaveChangesAsync();
+        return true;
+    }
+
     private IQueryable<Order> OrderDetailQuery()
     {
         return _unitOfWork.Repository<Order>().Query()
