@@ -161,14 +161,119 @@ public class OrderService : IOrderService
         return true;
     }
 
-    private async Task<OrderDto> BuildOrderDtoAsync(int orderId)
+    public async Task<PagedResultDto<OrderDto>> GetMyOrdersAsync(string customerUserId, OrderQueryDto query)
     {
-        var order = await _unitOfWork.Repository<Order>().Query()
+        var ordersQuery = OrderDetailQuery()
+            .Where(o => o.CustomerUserId == customerUserId)
+            .OrderByDescending(o => o.CreatedAt);
+
+        var totalCount = await ordersQuery.CountAsync();
+
+        var items = await ordersQuery
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync();
+
+        return new PagedResultDto<OrderDto>
+        {
+            Items = items.Select(MapOrderDto).ToList(),
+            TotalCount = totalCount,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<OrderDto?> GetOrderByIdForCustomerAsync(string customerUserId, int orderId)
+    {
+        var order = await OrderDetailQuery()
+            .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerUserId == customerUserId);
+
+        return order is null ? null : MapOrderDto(order);
+    }
+
+    public async Task<PagedResultDto<SellerSubOrderDto>> GetShopOrdersAsync(string sellerUserId, OrderQueryDto query)
+    {
+        var shop = await _unitOfWork.Repository<Shop>().Query()
+            .FirstOrDefaultAsync(s => s.OwnerUserId == sellerUserId);
+
+        if (shop is null)
+        {
+            throw new InvalidOperationException("Bạn chưa có shop.");
+        }
+
+        var subOrdersQuery = _unitOfWork.Repository<SubOrder>().Query()
+            .Include(so => so.Order)
+            .Include(so => so.OrderItems)
+            .Where(so => so.ShopId == shop.Id)
+            .OrderByDescending(so => so.Order.CreatedAt);
+
+        var totalCount = await subOrdersQuery.CountAsync();
+
+        var items = await subOrdersQuery
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync();
+
+        return new PagedResultDto<SellerSubOrderDto>
+        {
+            Items = items.Select(so => new SellerSubOrderDto
+            {
+                OrderId = so.OrderId,
+                CreatedAt = so.Order.CreatedAt,
+                Status = so.Status,
+                Subtotal = so.Subtotal,
+                Items = so.OrderItems.Select(oi => new OrderItemDto
+                {
+                    ProductId = oi.ProductId,
+                    ProductName = oi.ProductName,
+                    UnitPrice = oi.UnitPrice,
+                    Quantity = oi.Quantity,
+                    LineTotal = oi.UnitPrice * oi.Quantity
+                }).ToList()
+            }).ToList(),
+            TotalCount = totalCount,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    public async Task<PagedResultDto<OrderDto>> GetAllOrdersAsync(OrderQueryDto query)
+    {
+        var ordersQuery = OrderDetailQuery()
+            .OrderByDescending(o => o.CreatedAt);
+
+        var totalCount = await ordersQuery.CountAsync();
+
+        var items = await ordersQuery
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync();
+
+        return new PagedResultDto<OrderDto>
+        {
+            Items = items.Select(MapOrderDto).ToList(),
+            TotalCount = totalCount,
+            Page = query.Page,
+            PageSize = query.PageSize
+        };
+    }
+
+    private IQueryable<Order> OrderDetailQuery()
+    {
+        return _unitOfWork.Repository<Order>().Query()
             .Include(o => o.Payment)
             .Include(o => o.SubOrders).ThenInclude(so => so.Shop)
-            .Include(o => o.SubOrders).ThenInclude(so => so.OrderItems)
-            .FirstAsync(o => o.Id == orderId);
+            .Include(o => o.SubOrders).ThenInclude(so => so.OrderItems);
+    }
 
+    private async Task<OrderDto> BuildOrderDtoAsync(int orderId)
+    {
+        var order = await OrderDetailQuery().FirstAsync(o => o.Id == orderId);
+        return MapOrderDto(order);
+    }
+
+    private static OrderDto MapOrderDto(Order order)
+    {
         return new OrderDto
         {
             Id = order.Id,

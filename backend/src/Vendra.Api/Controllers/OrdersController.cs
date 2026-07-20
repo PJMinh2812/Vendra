@@ -8,7 +8,7 @@ namespace Vendra.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Customer")]
+[Authorize]
 public class OrdersController : ControllerBase
 {
     private readonly IOrderService _orderService;
@@ -19,6 +19,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Checkout(CreateOrderDto dto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -31,5 +32,52 @@ public class OrdersController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> GetMyOrders([FromQuery] OrderQueryDto query)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _orderService.GetMyOrdersAsync(userId, query);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:int}")]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> GetMyOrderById(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var order = await _orderService.GetOrderByIdForCustomerAsync(userId, id);
+        if (order is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(order);
+    }
+
+    [HttpGet("shop")]
+    [Authorize(Roles = "Seller")]
+    public async Task<IActionResult> GetShopOrders([FromQuery] OrderQueryDto query)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        try
+        {
+            var result = await _orderService.GetShopOrdersAsync(userId, query);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAllOrders([FromQuery] OrderQueryDto query)
+    {
+        var result = await _orderService.GetAllOrdersAsync(query);
+        return Ok(result);
     }
 }
