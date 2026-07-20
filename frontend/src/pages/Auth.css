@@ -1,7 +1,43 @@
 .auth-page {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
   padding: 60px 16px;
+}
+
+.auth-demo-accounts {
+  width: 100%;
+  max-width: 380px;
+  padding: 16px;
+}
+
+.auth-demo-accounts h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.auth-demo-accounts table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.auth-demo-accounts th,
+.auth-demo-accounts td {
+  text-align: left;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.auth-demo-accounts tr[role='button'] {
+  cursor: pointer;
+}
+
+.auth-demo-accounts tr[role='button']:hover {
+  background: var(--color-bg);
 }
 
 .auth-card {

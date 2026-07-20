@@ -4,6 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import GoogleIcon from '../components/GoogleIcon';
 import './Auth.css';
 
+const DEMO_ACCOUNTS = [
+  { role: 'Customer', email: 'customer@vendra.test', password: 'Customer@123456' },
+  { role: 'Seller', email: 'seller@vendra.test', password: 'Seller@123456' },
+  { role: 'Admin', email: 'admin@vendra.test', password: 'Admin@123456' },
+];
+
 export default function Login() {
   const navigate = useNavigate();
   const { login, loginWithGoogle } = useAuth();
@@ -82,6 +88,36 @@ export default function Login() {
           Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
         </p>
       </form>
+
+      <div className="auth-demo-accounts card">
+        <h3>Tài khoản demo (bấm để điền)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Vai trò</th>
+              <th>Email</th>
+              <th>Mật khẩu</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DEMO_ACCOUNTS.map((acc) => (
+              <tr
+                key={acc.email}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setEmail(acc.email);
+                  setPassword(acc.password);
+                }}
+              >
+                <td>{acc.role}</td>
+                <td>{acc.email}</td>
+                <td>{acc.password}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
