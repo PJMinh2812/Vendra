@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getProductById } from '../api/products';
 import { getShopById } from '../api/shops';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import Rating from '../components/Rating';
 import QuantityInput from '../components/QuantityInput';
 import ProductDetailSkeleton from '../components/ProductDetailSkeleton';
@@ -13,6 +14,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { user } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [shop, setShop] = useState(null);
@@ -36,12 +38,20 @@ export default function ProductDetail() {
   if (!product) return <div className="skeleton-page container">Không tìm thấy sản phẩm.</div>;
 
   function handleAddToCart() {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     addItem(product.id, quantity);
     setAddedMessage(`Đã thêm ${quantity} sản phẩm vào giỏ hàng`);
     setTimeout(() => setAddedMessage(''), 2000);
   }
 
   function handleBuyNow() {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     addItem(product.id, quantity);
     navigate('/cart');
   }
