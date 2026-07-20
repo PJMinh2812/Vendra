@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { getShopById } from '../mock/data';
 import QuantityInput from '../components/QuantityInput';
 import { formatPrice } from '../utils/format';
 import './Cart.css';
@@ -27,11 +26,10 @@ export default function Cart() {
         <h1 className="cart-title">Giỏ Hàng</h1>
 
         {Object.entries(groupedByShop).map(([shopId, shopItems]) => {
-          const shop = getShopById(shopId);
           return (
             <div key={shopId} className="cart-shop-group card">
               <div className="cart-shop-group__header">
-                <span>🏪 {shop?.name ?? shopId}</span>
+                <span>🏪 {shopItems[0]?.product.shopName ?? shopId}</span>
               </div>
               {shopItems.map((item) => (
                 <div key={item.productId} className="cart-item">

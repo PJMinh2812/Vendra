@@ -1,10 +1,46 @@
 import { USE_MOCK, delay, apiFetch } from './client';
 import { orders } from '../mock/data';
 
+// OrderItemDto/SubOrderDto thật đã snapshot sẵn productName/unitPrice/shopName ngay trong response —
+// không cần gọi thêm getProductById/getShopById như bản mock (vốn chỉ lưu id, phải tra cứu thêm).
+function adaptOrderItem(item) {
+  return {
+    productId: String(item.productId),
+    productName: item.productName,
+    unitPrice: item.unitPrice,
+    quantity: item.quantity,
+    lineTotal: item.lineTotal,
+  };
+}
+
+function adaptSubOrder(sub) {
+  return {
+    shopId: String(sub.shopId),
+    shopName: sub.shopName,
+    status: (sub.status || 'pending').toLowerCase(),
+    subtotal: sub.subtotal,
+    items: sub.items.map(adaptOrderItem),
+  };
+}
+
+function adaptOrder(dto) {
+  return {
+    id: String(dto.id),
+    createdAt: dto.createdAt,
+    totalAmount: dto.totalAmount,
+    shippingAddress: dto.shippingAddress,
+    paymentMethod: dto.paymentMethod,
+    paymentStatus: dto.paymentStatus,
+    payUrl: dto.payUrl ?? null,
+    subOrders: dto.subOrders.map(adaptSubOrder),
+  };
+}
+
 export async function getOrders() {
   if (!USE_MOCK) {
-    // → GET /api/orders  (đơn của user hiện tại)
-    return apiFetch('/orders');
+    // → GET /api/orders (đơn của user hiện tại, phân trang — lấy 1 trang lớn cho trang Orders)
+    const res = await apiFetch('/orders?page=1&pageSize=50');
+    return res.items.map(adaptOrder);
   }
   await delay(300);
   return orders;
@@ -13,29 +49,30 @@ export async function getOrders() {
 export async function getOrderById(id) {
   if (!USE_MOCK) {
     // → GET /api/orders/{id}
-    return apiFetch(`/orders/${id}`);
+    const dto = await apiFetch(`/orders/${id}`);
+    return adaptOrder(dto);
   }
   await delay(200);
   return orders.find((o) => o.id === id) ?? null;
 }
 
-// cartItemsByShop: [{ shopId, items: [{ productId, quantity, unitPrice }] }]
-// Phản ánh đúng luồng Checkout thật: 1 Order cha tách thành nhiều SubOrder theo shop (Ngày 10).
-export async function createOrder(cartItemsByShop) {
+// { shippingAddress, paymentMethod: 'COD' | 'MoMo' } — backend tự lấy giỏ hàng của user hiện tại
+// (đã đồng bộ lên server ngay trước khi gọi hàm này), không nhận danh sách sản phẩm từ client.
+export async function createOrder({ shippingAddress, paymentMethod }) {
   if (!USE_MOCK) {
-    // → POST /api/orders  (transaction xuyên nhiều bảng qua UnitOfWork ở backend)
-    return apiFetch('/orders', { method: 'POST', body: JSON.stringify({ subOrders: cartItemsByShop }) });
+    const dto = await apiFetch('/orders', {
+      method: 'POST',
+      body: JSON.stringify({ shippingAddress, paymentMethod }),
+    });
+    return adaptOrder(dto);
   }
   await delay(500);
   const newOrder = {
     id: `order-${Date.now()}`,
     createdAt: new Date().toISOString(),
-    subOrders: cartItemsByShop.map((group, i) => ({
-      id: `suborder-${Date.now()}-${i}`,
-      shopId: group.shopId,
-      status: 'pending',
-      items: group.items,
-    })),
+    shippingAddress,
+    paymentMethod,
+    subOrders: [],
   };
   orders.unshift(newOrder);
   return newOrder;

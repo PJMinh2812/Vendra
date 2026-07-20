@@ -1,39 +1,64 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { getShopById } from '../mock/data';
 import { createOrder } from '../api/orders';
+import { addCartItem } from '../api/cart';
 import { formatPrice } from '../utils/format';
 import './Checkout.css';
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { selectedItems, selectedTotal, clearSelected } = useCart();
   const [address, setAddress] = useState('123 Đường Nguyễn Văn Cừ, Quận 5, TP. Hồ Chí Minh');
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [paymentMethod, setPaymentMethod] = useState('COD');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  if (selectedItems.length === 0) {
-    navigate('/cart');
+  // Checkout thật yêu cầu đăng nhập (backend: POST /api/orders chỉ cho role Customer) —
+  // giỏ hàng vẫn duyệt/thêm được khi chưa đăng nhập, chỉ chặn ở bước đặt hàng.
+  useEffect(() => {
+    if (!user) navigate('/login');
+  }, [user, navigate]);
+
+  if (!user || selectedItems.length === 0) {
+    if (user && selectedItems.length === 0) navigate('/cart');
     return null;
   }
 
   const groupedByShop = selectedItems.reduce((groups, item) => {
     const key = item.product.shopId;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
+    if (!groups[key]) groups[key] = { shopName: item.product.shopName, items: [] };
+    groups[key].items.push(item);
     return groups;
   }, {});
 
   async function handlePlaceOrder() {
     setSubmitting(true);
-    const payload = Object.entries(groupedByShop).map(([shopId, items]) => ({
-      shopId,
-      items: items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.product.price })),
-    }));
-    const order = await createOrder(payload);
-    clearSelected();
-    navigate(`/order-success/${order.id}`);
+    setError('');
+    try {
+      // Giỏ hàng ở frontend giữ local (localStorage) để duyệt ẩn danh, nhưng backend tạo đơn
+      // từ đúng CartItems đã lưu của user trên server — nên phải đồng bộ giỏ local lên server
+      // ngay trước khi gọi checkout.
+      for (const item of selectedItems) {
+        await addCartItem(item.productId, item.quantity);
+      }
+
+      const order = await createOrder({ shippingAddress: address, paymentMethod });
+      clearSelected();
+
+      if (order.paymentMethod === 'MoMo' && order.payUrl) {
+        window.location.href = order.payUrl;
+        return;
+      }
+
+      navigate(`/order-success/${order.id}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -45,13 +70,12 @@ export default function Checkout() {
             <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} />
           </div>
 
-          {Object.entries(groupedByShop).map(([shopId, items]) => {
-            const shop = getShopById(shopId);
-            const subtotal = items.reduce((s, i) => s + i.product.price * i.quantity, 0);
+          {Object.entries(groupedByShop).map(([shopId, group]) => {
+            const subtotal = group.items.reduce((s, i) => s + i.product.price * i.quantity, 0);
             return (
               <div key={shopId} className="checkout-shop-group card">
-                <div className="checkout-shop-group__header">🏪 {shop?.name ?? shopId}</div>
-                {items.map((item) => (
+                <div className="checkout-shop-group__header">🏪 {group.shopName ?? shopId}</div>
+                {group.items.map((item) => (
                   <div key={item.productId} className="checkout-item">
                     <img src={item.product.image} alt={item.product.name} />
                     <span className="checkout-item__name">{item.product.name}</span>
@@ -60,7 +84,7 @@ export default function Checkout() {
                   </div>
                 ))}
                 <div className="checkout-shop-group__subtotal">
-                  Tổng cộng ({items.length} sản phẩm): <span className="price">{formatPrice(subtotal)}</span>
+                  Tổng cộng ({group.items.length} sản phẩm): <span className="price">{formatPrice(subtotal)}</span>
                 </div>
               </div>
             );
@@ -71,20 +95,21 @@ export default function Checkout() {
             <label>
               <input
                 type="radio"
-                checked={paymentMethod === 'cod'}
-                onChange={() => setPaymentMethod('cod')}
+                checked={paymentMethod === 'COD'}
+                onChange={() => setPaymentMethod('COD')}
               />
               Thanh toán khi nhận hàng (COD)
             </label>
             <label>
               <input
                 type="radio"
-                checked={paymentMethod === 'card'}
-                onChange={() => setPaymentMethod('card')}
+                checked={paymentMethod === 'MoMo'}
+                onChange={() => setPaymentMethod('MoMo')}
               />
-              Thẻ tín dụng / Ghi nợ
+              Ví MoMo
             </label>
           </div>
+          {error && <p className="auth-error">{error}</p>}
         </div>
 
         <div className="checkout-sidebar card">

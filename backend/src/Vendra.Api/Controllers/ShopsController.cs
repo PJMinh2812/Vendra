@@ -37,6 +37,15 @@ public class ShopsController : ControllerBase
         return Ok(shop);
     }
 
+    [HttpGet("{id:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var shop = await _shopService.GetByIdAsync(id);
+        if (shop is null) return NotFound();
+        return Ok(shop);
+    }
+
     [HttpGet]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAll([FromQuery] string? status)

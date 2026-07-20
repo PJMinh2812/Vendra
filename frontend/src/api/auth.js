@@ -1,9 +1,36 @@
-import { USE_MOCK, delay, apiFetch } from './client';
+import { USE_MOCK, delay, apiFetch, setTokens, clearTokens } from './client';
+
+const ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+
+// Backend JWT không tự chứa "fullName" trong claim (chỉ sub/email/role) — decode để lấy
+// userId/email/role thật, fullName dùng tên đã biết (lúc đăng ký) hoặc phần trước @ của email.
+function decodeJwt(token) {
+  const payload = token.split('.')[1];
+  const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+  const json = decodeURIComponent(
+    atob(base64)
+      .split('')
+      .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+      .join('')
+  );
+  return JSON.parse(json);
+}
+
+function buildUserFromToken(accessToken, fallbackFullName) {
+  const claims = decodeJwt(accessToken);
+  return {
+    id: claims.sub,
+    email: claims.email,
+    role: claims[ROLE_CLAIM],
+    fullName: fallbackFullName || claims.email.split('@')[0],
+  };
+}
 
 export async function login({ email, password }) {
   if (!USE_MOCK) {
-    // → POST /api/auth/login  (trả về accessToken + refreshToken theo thiết kế JWT Ngày 6)
-    return apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    const result = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    setTokens(result);
+    return { user: buildUserFromToken(result.accessToken), accessToken: result.accessToken };
   }
   await delay(400);
   if (!email || !password) {
@@ -17,8 +44,13 @@ export async function login({ email, password }) {
 
 export async function register({ email, password, fullName }) {
   if (!USE_MOCK) {
-    // → POST /api/auth/register
-    return apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, fullName }) });
+    // Frontend này chỉ phục vụ khách mua hàng nên luôn đăng ký role Customer.
+    const result = await apiFetch('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, fullName, role: 'Customer' }),
+    });
+    setTokens(result);
+    return { user: buildUserFromToken(result.accessToken, fullName), accessToken: result.accessToken };
   }
   await delay(400);
   if (!email || !password || !fullName) {
@@ -30,11 +62,14 @@ export async function register({ email, password, fullName }) {
   };
 }
 
+export function logout() {
+  clearTokens();
+}
+
+// Backend chưa có endpoint quên/đặt lại mật khẩu hay đăng nhập Google — giữ mock cho 2 hàm này
+// (không rẽ theo USE_MOCK) để UI không vỡ, không phải vì quên nối API thật.
+
 export async function forgotPassword({ email }) {
-  if (!USE_MOCK) {
-    // → POST /api/auth/forgot-password  (gửi email chứa link/token đặt lại mật khẩu)
-    return apiFetch('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
-  }
   await delay(500);
   if (!email) {
     throw new Error('Vui lòng nhập email');
@@ -43,10 +78,6 @@ export async function forgotPassword({ email }) {
 }
 
 export async function resetPassword({ password }) {
-  if (!USE_MOCK) {
-    // → POST /api/auth/reset-password  (kèm token nhận từ link trong email)
-    return apiFetch('/auth/reset-password', { method: 'POST', body: JSON.stringify({ password }) });
-  }
   await delay(500);
   if (!password || password.length < 6) {
     throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
@@ -55,10 +86,6 @@ export async function resetPassword({ password }) {
 }
 
 export async function loginWithGoogle() {
-  if (!USE_MOCK) {
-    // → POST /api/auth/google  (backend đổi Google ID token lấy JWT nội bộ, theo thiết kế Identity Ngày 6)
-    return apiFetch('/auth/google', { method: 'POST' });
-  }
   await delay(500);
   return {
     user: { id: 'user-google-1', email: 'vendra.user@gmail.com', fullName: 'Vendra User', role: 'Customer' },

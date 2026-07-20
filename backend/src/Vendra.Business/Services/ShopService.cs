@@ -47,6 +47,14 @@ public class ShopService : IShopService
         return shop is null ? null : ToDto(shop);
     }
 
+    public async Task<ShopDto?> GetByIdAsync(int id)
+    {
+        var shop = await _unitOfWork.Repository<Shop>().Query()
+            .FirstOrDefaultAsync(s => s.Id == id && s.Status == "Approved");
+
+        return shop is null ? null : ToDto(shop);
+    }
+
     public async Task<List<ShopDto>> GetAllAsync(string? status)
     {
         var query = _unitOfWork.Repository<Shop>().Query();

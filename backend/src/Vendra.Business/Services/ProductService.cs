@@ -80,7 +80,9 @@ public class ProductService : IProductService
                 Price = p.Price,
                 Stock = p.Stock,
                 ImageUrl = p.ImageUrl,
+                CategoryId = p.CategoryId,
                 CategoryName = p.Category.Name,
+                ShopId = p.ShopId,
                 ShopName = p.Shop.Name
             })
             .ToListAsync();
@@ -218,7 +220,9 @@ public class ProductService : IProductService
         Price = p.Price,
         Stock = p.Stock,
         ImageUrl = p.ImageUrl,
+        CategoryId = p.CategoryId,
         CategoryName = p.Category.Name,
+        ShopId = p.ShopId,
         ShopName = p.Shop.Name
     };
 }

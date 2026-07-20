@@ -38,6 +38,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    authApi.logout();
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
   }
