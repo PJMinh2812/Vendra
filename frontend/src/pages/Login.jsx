@@ -24,8 +24,8 @@ export default function Login() {
     setError('');
     setSubmitting(true);
     try {
-      await login({ email, password });
-      navigate('/');
+      const loggedIn = await login({ email, password });
+      navigate(loggedIn.role === 'Admin' ? '/admin/shops' : '/');
     } catch (err) {
       setError(err.message);
     } finally {

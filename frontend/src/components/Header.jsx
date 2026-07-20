@@ -13,6 +13,7 @@ export default function Header() {
   const { totalCount, items, clearCart } = useCart();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = user?.role === 'Admin';
 
   useEffect(() => {
     function onScroll() {
@@ -43,12 +44,10 @@ export default function Header() {
     <header className={`header ${scrolled ? 'header--scrolled' : ''}`}>
       <div className="header__top">
         <div className="container header__top-inner">
-          <Link to="/seller">Kênh Người Bán</Link>
-          {user?.role === 'Admin' && (
-            <>
-              <span className="header__divider" />
-              <Link to="/admin/shops">Quản Trị</Link>
-            </>
+          {isAdmin ? (
+            <Link to="/admin/shops">Quản Trị</Link>
+          ) : (
+            <Link to="/seller">Kênh Người Bán</Link>
           )}
           <span className="header__divider" />
           <span>Kết nối</span>
@@ -92,37 +91,41 @@ export default function Header() {
       </div>
 
       <div className="header__main container">
-        <Link to="/" className="header__logo">
+        <Link to={isAdmin ? '/admin/shops' : '/'} className="header__logo">
           Vendra
         </Link>
 
-        <form className="header__search" onSubmit={handleSearch}>
-          <input
-            type="text"
-            placeholder="Tìm kiếm sản phẩm, thương hiệu..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <button type="submit" aria-label="Tìm kiếm">
-            🔍
-          </button>
-        </form>
+        {!isAdmin && (
+          <>
+            <form className="header__search" onSubmit={handleSearch}>
+              <input
+                type="text"
+                placeholder="Tìm kiếm sản phẩm, thương hiệu..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <button type="submit" aria-label="Tìm kiếm">
+                🔍
+              </button>
+            </form>
 
-        <Link to="/cart" className="header__cart">
-          <CartIcon size={26} />
-          {totalCount > 0 && <span className="header__cart-badge">{totalCount}</span>}
-          {items.length > 0 && (
-            <div className="header__cart-preview">
-              <p className="header__cart-preview-title">Sản phẩm mới thêm</p>
-              {items.slice(0, 4).map((i) => (
-                <div key={i.productId} className="header__cart-preview-item">
-                  <img src={i.product.image} alt={i.product.name} />
-                  <span>{i.product.name}</span>
+            <Link to="/cart" className="header__cart">
+              <CartIcon size={26} />
+              {totalCount > 0 && <span className="header__cart-badge">{totalCount}</span>}
+              {items.length > 0 && (
+                <div className="header__cart-preview">
+                  <p className="header__cart-preview-title">Sản phẩm mới thêm</p>
+                  {items.slice(0, 4).map((i) => (
+                    <div key={i.productId} className="header__cart-preview-item">
+                      <img src={i.product.image} alt={i.product.name} />
+                      <span>{i.product.name}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </Link>
+              )}
+            </Link>
+          </>
+        )}
       </div>
     </header>
   );
