@@ -78,6 +78,12 @@ export async function createOrder({ shippingAddress, paymentMethod }) {
   return newOrder;
 }
 
+// Chỉ Customer tự hủy được, và chỉ khi SubOrder còn "Pending" — backend tự kiểm tra lại
+// (không đủ điều kiện thì ném lỗi 400 với message rõ ràng, vd đơn MoMo đã thanh toán).
+export async function cancelSubOrder(orderId, shopId) {
+  return apiFetch(`/orders/${orderId}/shops/${shopId}/cancel`, { method: 'PUT' });
+}
+
 // SellerSubOrderDto phẳng hơn OrderDto (không có shopId/shopName vì luôn ngầm định là shop của
 // người gọi) — dùng lại adaptOrderItem nhưng map riêng cấp ngoài.
 function adaptSellerSubOrder(sub) {

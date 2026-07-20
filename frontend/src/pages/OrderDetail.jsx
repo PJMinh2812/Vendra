@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getOrderById } from '../api/orders';
+import { getOrderById, cancelSubOrder } from '../api/orders';
 import { formatDate, formatPrice } from '../utils/format';
 import { STATUS_COLORS, STATUS_LABELS } from '../utils/orderStatus';
 import OrderListSkeleton from '../components/OrderListSkeleton';
@@ -11,10 +11,29 @@ const ITEM_PLACEHOLDER = 'https://picsum.photos/seed/vendra-order-item/80';
 export default function OrderDetail() {
   const { id } = useParams();
   const [order, setOrder] = useState(undefined);
+  const [cancellingShopId, setCancellingShopId] = useState(null);
+
+  function load() {
+    getOrderById(id).then(setOrder);
+  }
 
   useEffect(() => {
-    getOrderById(id).then(setOrder);
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  async function handleCancel(shopId) {
+    if (!window.confirm('Hủy đơn hàng này?')) return;
+    setCancellingShopId(shopId);
+    try {
+      await cancelSubOrder(id, shopId);
+      load();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setCancellingShopId(null);
+    }
+  }
 
   if (order === undefined) return <div className="skeleton-page container"><OrderListSkeleton /></div>;
   if (order === null) return <div className="skeleton-page container">Không tìm thấy đơn hàng.</div>;
@@ -53,6 +72,18 @@ export default function OrderDetail() {
             <div className="orders-suborder__total" style={{ padding: '12px 16px' }}>
               Thành tiền: <span className="price">{formatPrice(sub.subtotal)}</span>
             </div>
+            {sub.status === 'pending' && (
+              <div className="orders-suborder__actions">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={cancellingShopId === sub.shopId}
+                  onClick={() => handleCancel(sub.shopId)}
+                >
+                  {cancellingShopId === sub.shopId ? 'Đang hủy...' : 'Hủy Đơn'}
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

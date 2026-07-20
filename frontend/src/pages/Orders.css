@@ -36,13 +36,22 @@
   font-weight: 500;
 }
 
-.orders-suborder {
-  display: block;
+.orders-suborder-block {
   border-bottom: 8px solid var(--color-bg);
 }
 
-.orders-suborder:last-child {
+.orders-suborder-block:last-child {
   border-bottom: none;
+}
+
+.orders-suborder {
+  display: block;
+}
+
+.orders-suborder__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 16px 12px;
 }
 
 .orders-suborder__shop {

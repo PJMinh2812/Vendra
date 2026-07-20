@@ -66,4 +66,18 @@ public class OrdersController : ControllerBase
         var result = await _orderService.GetAllOrdersAsync(query);
         return Ok(result);
     }
+
+    [HttpPut("{id:int}/shops/{shopId:int}/cancel")]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> CancelSubOrder(int id, int shopId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var success = await _orderService.CancelSubOrderAsync(userId, id, shopId);
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }

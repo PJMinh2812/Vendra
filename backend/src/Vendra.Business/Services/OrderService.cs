@@ -258,6 +258,50 @@ public class OrderService : IOrderService
         };
     }
 
+    public async Task<bool> CancelSubOrderAsync(string customerUserId, int orderId, int shopId)
+    {
+        var order = await _unitOfWork.Repository<Order>().Query()
+            .Include(o => o.Payment)
+            .Include(o => o.SubOrders).ThenInclude(so => so.OrderItems).ThenInclude(oi => oi.Product)
+            .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerUserId == customerUserId);
+
+        if (order is null)
+        {
+            return false;
+        }
+
+        var subOrder = order.SubOrders.FirstOrDefault(so => so.ShopId == shopId);
+        if (subOrder is null)
+        {
+            return false;
+        }
+
+        if (subOrder.Status != "Pending")
+        {
+            throw new InvalidOperationException("Đơn hàng này không còn ở trạng thái chờ xử lý, không thể hủy.");
+        }
+
+        // COD luôn được đánh dấu Payment.Status = "Paid" ngay lúc tạo đơn (Ngày 10) dù chưa
+        // thật sự thu tiền — chỉ chặn hủy khi MoMo đã thật sự thanh toán xong, vì hoàn tiền MoMo
+        // cần gọi API Refund riêng, ngoài phạm vi hiện tại.
+        if (order.Payment?.Method == "MoMo" && order.Payment.Status == "Paid")
+        {
+            throw new InvalidOperationException("Đơn hàng đã thanh toán qua MoMo, không thể tự hủy.");
+        }
+
+        subOrder.Status = "Cancelled";
+        _unitOfWork.Repository<SubOrder>().Update(subOrder);
+
+        foreach (var item in subOrder.OrderItems)
+        {
+            item.Product.Stock += item.Quantity;
+            _unitOfWork.Repository<Product>().Update(item.Product);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+        return true;
+    }
+
     private IQueryable<Order> OrderDetailQuery()
     {
         return _unitOfWork.Repository<Order>().Query()

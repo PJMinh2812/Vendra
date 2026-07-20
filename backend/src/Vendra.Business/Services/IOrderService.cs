@@ -10,4 +10,5 @@ public interface IOrderService
     Task<OrderDto?> GetOrderByIdForCustomerAsync(string customerUserId, int orderId);
     Task<PagedResultDto<SellerSubOrderDto>> GetShopOrdersAsync(string sellerUserId, OrderQueryDto query);
     Task<PagedResultDto<OrderDto>> GetAllOrdersAsync(OrderQueryDto query);
+    Task<bool> CancelSubOrderAsync(string customerUserId, int orderId, int shopId);
 }
