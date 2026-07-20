@@ -61,6 +61,36 @@ public class MoMoService : IMoMoService
         return result.PayUrl;
     }
 
+    // Truy vấn chủ động trạng thái giao dịch từ MoMo (request đi ra, không cần MoMo gọi ngược
+    // vào máy) — dùng khi khách được redirect về app để chốt trạng thái thật, không phụ thuộc IPN.
+    public async Task<int> QueryPaymentStatusAsync(string orderId)
+    {
+        var requestId = Guid.NewGuid().ToString();
+
+        var rawSignature =
+            $"accessKey={_settings.AccessKey}&orderId={orderId}&partnerCode={_settings.PartnerCode}&requestId={requestId}";
+
+        var payload = new
+        {
+            partnerCode = _settings.PartnerCode,
+            requestId,
+            orderId,
+            lang = "vi",
+            signature = Sign(rawSignature, _settings.SecretKey)
+        };
+
+        var queryEndpoint = _settings.Endpoint.Replace("/create", "/query");
+        var response = await _httpClient.PostAsJsonAsync(queryEndpoint, payload);
+        var result = await response.Content.ReadFromJsonAsync<MoMoQueryResponse>();
+
+        if (result is null)
+        {
+            throw new InvalidOperationException("MoMo không phản hồi khi truy vấn trạng thái giao dịch.");
+        }
+
+        return result.ResultCode;
+    }
+
     public bool VerifyIpnSignature(MoMoIpnDto ipn)
     {
         var rawSignature =
@@ -93,4 +123,13 @@ internal class MoMoCreateResponse
 
     [JsonPropertyName("payUrl")]
     public string PayUrl { get; set; } = string.Empty;
+}
+
+internal class MoMoQueryResponse
+{
+    [JsonPropertyName("resultCode")]
+    public int ResultCode { get; set; }
+
+    [JsonPropertyName("message")]
+    public string Message { get; set; } = string.Empty;
 }

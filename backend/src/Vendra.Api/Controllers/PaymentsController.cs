@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vendra.Business.DTOs;
@@ -22,5 +23,14 @@ public class PaymentsController : ControllerBase
     {
         var handled = await _orderService.HandleMoMoIpnAsync(ipn);
         return handled ? Ok() : BadRequest();
+    }
+
+    [HttpPost("momo/reconcile")]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> ReconcileMoMo(MoMoReconcileDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var status = await _orderService.ReconcileMoMoPaymentAsync(userId, dto.OrderId);
+        return Ok(new { status });
     }
 }

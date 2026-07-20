@@ -148,7 +148,6 @@ public class OrderService : IOrderService
         {
             payment.Status = "Paid";
             payment.PaidAt = DateTime.UtcNow;
-            payment.TransactionId = ipn.TransId;
         }
         else
         {
@@ -159,6 +158,42 @@ public class OrderService : IOrderService
         await _unitOfWork.SaveChangesAsync();
 
         return true;
+    }
+
+    // Chốt trạng thái thanh toán MoMo bằng cách hỏi thẳng MoMo (không đợi IPN gọi ngược vào máy).
+    // Gọi khi khách được redirect về /order-result. Trả về trạng thái mới nhất của Payment.
+    public async Task<string> ReconcileMoMoPaymentAsync(string customerUserId, string momoOrderId)
+    {
+        var payment = await _unitOfWork.Repository<Payment>().Query()
+            .Include(p => p.Order)
+            .FirstOrDefaultAsync(p => p.TransactionId == momoOrderId);
+
+        if (payment is null || payment.Order.CustomerUserId != customerUserId)
+        {
+            throw new InvalidOperationException("Không tìm thấy giao dịch thanh toán.");
+        }
+
+        if (payment.Status != "Pending")
+        {
+            return payment.Status;
+        }
+
+        var resultCode = await _moMoService.QueryPaymentStatusAsync(momoOrderId);
+
+        if (resultCode == 0)
+        {
+            payment.Status = "Paid";
+            payment.PaidAt = DateTime.UtcNow;
+        }
+        else if (resultCode != 1000)
+        {
+            payment.Status = "Failed";
+        }
+
+        _unitOfWork.Repository<Payment>().Update(payment);
+        await _unitOfWork.SaveChangesAsync();
+
+        return payment.Status;
     }
 
     public async Task<PagedResultDto<OrderDto>> GetMyOrdersAsync(string customerUserId, OrderQueryDto query)

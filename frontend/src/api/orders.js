@@ -112,6 +112,16 @@ export async function updateSubOrderStatus(orderId, status) {
   return apiFetch(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
 }
 
+// Chốt trạng thái thanh toán MoMo khi khách được redirect về app — backend hỏi thẳng MoMo,
+// không đợi IPN. Trả về status thật ('Paid' | 'Failed' | 'Pending').
+export async function reconcileMoMoPayment(momoOrderId) {
+  const res = await apiFetch('/payments/momo/reconcile', {
+    method: 'POST',
+    body: JSON.stringify({ orderId: momoOrderId }),
+  });
+  return res.status;
+}
+
 // --- Admin Dashboard ---
 export async function getAllOrders(page = 1) {
   const res = await apiFetch(`/orders/all?page=${page}&pageSize=20`);

@@ -6,6 +6,7 @@ public interface IOrderService
 {
     Task<OrderDto> CheckoutAsync(string customerUserId, CreateOrderDto dto);
     Task<bool> HandleMoMoIpnAsync(MoMoIpnDto ipn);
+    Task<string> ReconcileMoMoPaymentAsync(string customerUserId, string momoOrderId);
     Task<PagedResultDto<OrderDto>> GetMyOrdersAsync(string customerUserId, OrderQueryDto query);
     Task<OrderDto?> GetOrderByIdForCustomerAsync(string customerUserId, int orderId);
     Task<PagedResultDto<SellerSubOrderDto>> GetShopOrdersAsync(string sellerUserId, OrderQueryDto query);
