@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getProductById } from '../api/products';
 import { getShopById } from '../api/shops';
 import { useCart } from '../context/CartContext';
@@ -99,13 +99,13 @@ export default function ProductDetail() {
             {addedMessage && <p className="product-detail__added-msg">{addedMessage}</p>}
 
             {shop && (
-              <div className="product-detail__shop card">
+              <Link to={`/shop/${shop.id}`} className="product-detail__shop card">
                 <img src={shop.avatar} alt={shop.name} />
                 <div>
                   <p className="product-detail__shop-name">{shop.name}</p>
                   <p className="text-muted">{shop.location} · {shop.followers.toLocaleString('vi-VN')} người theo dõi</p>
                 </div>
-              </div>
+              </Link>
             )}
           </div>
         </div>

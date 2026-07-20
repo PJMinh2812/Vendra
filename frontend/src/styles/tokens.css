@@ -10,6 +10,8 @@
   --color-border: #ececef;
   --color-rating: #ffb700;
   --color-success: #16a34a;
+  --color-error: #e0341f;
+  --color-error-light: #fdeaea;
 
   --header-height: 64px;
   --subheader-height: 36px;

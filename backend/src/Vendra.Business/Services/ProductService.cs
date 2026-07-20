@@ -56,6 +56,11 @@ public class ProductService : IProductService
             productsQuery = productsQuery.Where(p => p.CategoryId == query.CategoryId.Value);
         }
 
+        if (query.ShopId.HasValue)
+        {
+            productsQuery = productsQuery.Where(p => p.ShopId == query.ShopId.Value);
+        }
+
         if (query.MinPrice.HasValue)
         {
             productsQuery = productsQuery.Where(p => p.Price >= query.MinPrice.Value);

@@ -77,3 +77,27 @@ export async function createOrder({ shippingAddress, paymentMethod }) {
   orders.unshift(newOrder);
   return newOrder;
 }
+
+// SellerSubOrderDto phẳng hơn OrderDto (không có shopId/shopName vì luôn ngầm định là shop của
+// người gọi) — dùng lại adaptOrderItem nhưng map riêng cấp ngoài.
+function adaptSellerSubOrder(sub) {
+  return {
+    orderId: String(sub.orderId),
+    createdAt: sub.createdAt,
+    status: (sub.status || 'pending').toLowerCase(),
+    subtotal: sub.subtotal,
+    items: sub.items.map(adaptOrderItem),
+  };
+}
+
+// --- Seller Dashboard ---
+export async function getShopOrders(page = 1) {
+  const res = await apiFetch(`/orders/shop?page=${page}&pageSize=50`);
+  return { items: res.items.map(adaptSellerSubOrder), totalPages: Math.max(1, Math.ceil(res.totalCount / res.pageSize)) };
+}
+
+// --- Admin Dashboard ---
+export async function getAllOrders(page = 1) {
+  const res = await apiFetch(`/orders/all?page=${page}&pageSize=20`);
+  return { items: res.items.map(adaptOrder), totalPages: Math.max(1, Math.ceil(res.totalCount / res.pageSize)) };
+}

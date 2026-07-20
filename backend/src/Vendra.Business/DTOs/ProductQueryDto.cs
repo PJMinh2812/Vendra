@@ -5,6 +5,7 @@ public class ProductQueryDto
 {
     public string? Search {get; set; }
     public int? CategoryId {get; set; }
+    public int? ShopId {get; set; }
 
     [Range(0, double.MaxValue)]
     public decimal? MinPrice{get; set; }

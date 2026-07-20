@@ -42,12 +42,11 @@ export async function login({ email, password }) {
   };
 }
 
-export async function register({ email, password, fullName }) {
+export async function register({ email, password, fullName, role = 'Customer' }) {
   if (!USE_MOCK) {
-    // Frontend này chỉ phục vụ khách mua hàng nên luôn đăng ký role Customer.
     const result = await apiFetch('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ email, password, fullName, role: 'Customer' }),
+      body: JSON.stringify({ email, password, fullName, role }),
     });
     setTokens(result);
     return { user: buildUserFromToken(result.accessToken, fullName), accessToken: result.accessToken };
@@ -57,7 +56,7 @@ export async function register({ email, password, fullName }) {
     throw new Error('Vui lòng điền đầy đủ thông tin');
   }
   return {
-    user: { id: 'user-1', email, fullName, role: 'Customer' },
+    user: { id: 'user-1', email, fullName, role },
     accessToken: 'mock-access-token',
   };
 }

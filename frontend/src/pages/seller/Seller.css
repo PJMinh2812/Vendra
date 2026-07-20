@@ -1,0 +1,121 @@
+.dashboard-page {
+  padding: 24px 0 48px;
+}
+
+.dashboard-page h1 {
+  font-size: 20px;
+  margin: 0 0 20px;
+}
+
+.dashboard-filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dashboard-filter-tabs button {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.dashboard-filter-tabs button.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.dashboard-form {
+  max-width: 480px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-form input,
+.dashboard-form textarea,
+.dashboard-form select {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.dashboard-form label {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shop-status-card {
+  padding: 24px;
+  max-width: 480px;
+}
+
+.shop-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.shop-status-badge--pending {
+  background: #fff4e0;
+  color: #f5a623;
+}
+
+.shop-status-badge--approved {
+  background: #e6f9ec;
+  color: var(--color-success);
+}
+
+.shop-status-badge--rejected {
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+}
+
+.dashboard-table th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.dashboard-table img {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+.dashboard-order-card {
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.dashboard-order-card__header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-weight: 600;
+}

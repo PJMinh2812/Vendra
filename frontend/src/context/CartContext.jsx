@@ -29,13 +29,30 @@ export function CartProvider({ children }) {
     if (missingIds.length === 0) return;
 
     let cancelled = false;
-    Promise.all(missingIds.map((id) => getProductById(id).then((p) => [id, p]))).then((pairs) => {
+    // allSettled (không phải all) — 1 sản phẩm lỗi (đã bị xóa, hoặc id cũ còn sót lại trong
+    // localStorage từ trước khi nối API thật) không được làm hỏng toàn bộ giỏ hàng.
+    Promise.allSettled(missingIds.map((id) => getProductById(id).then((p) => [id, p]))).then((results) => {
       if (cancelled) return;
-      setProductsById((prev) => {
-        const next = { ...prev };
-        for (const [id, p] of pairs) next[id] = p;
-        return next;
+
+      const resolved = {};
+      const failedIds = [];
+      results.forEach((r, i) => {
+        const id = missingIds[i];
+        if (r.status === 'fulfilled' && r.value[1]) {
+          resolved[id] = r.value[1];
+        } else {
+          failedIds.push(id);
+        }
       });
+
+      if (Object.keys(resolved).length > 0) {
+        setProductsById((prev) => ({ ...prev, ...resolved }));
+      }
+      if (failedIds.length > 0) {
+        // Tự dọn khỏi giỏ — id không load được sẽ mãi mãi thất bại, giữ lại chỉ khiến
+        // badge số lượng sai lệch với giỏ hàng thực sự hiển thị được.
+        setItems((prev) => prev.filter((i) => !failedIds.includes(i.productId)));
+      }
     });
     return () => {
       cancelled = true;

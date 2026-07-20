@@ -10,6 +10,7 @@ export default function Register() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('Customer');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
@@ -19,8 +20,8 @@ export default function Register() {
     setError('');
     setSubmitting(true);
     try {
-      await register({ fullName, email, password });
-      navigate('/');
+      await register({ fullName, email, password, role });
+      navigate(role === 'Seller' ? '/seller' : '/');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -63,6 +64,16 @@ export default function Register() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <div className="auth-role-picker">
+          <label>
+            <input type="radio" checked={role === 'Customer'} onChange={() => setRole('Customer')} />
+            Khách hàng — mua sắm
+          </label>
+          <label>
+            <input type="radio" checked={role === 'Seller'} onChange={() => setRole('Seller')} />
+            Người bán — mở gian hàng
+          </label>
+        </div>
         {error && <p className="auth-error">{error}</p>}
         <button type="submit" className="btn btn-primary" disabled={submitting}>
           {submitting ? 'Đang đăng ký...' : 'Đăng Ký'}

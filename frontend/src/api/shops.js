@@ -8,8 +8,11 @@ const PLACEHOLDER_AVATAR = 'https://picsum.photos/seed/vendra-shop/100';
 function adaptShop(dto) {
   return {
     id: String(dto.id),
+    ownerUserId: dto.ownerUserId,
     name: dto.name,
     description: dto.description ?? '',
+    status: dto.status,
+    createdAt: dto.createdAt,
     avatar: PLACEHOLDER_AVATAR,
     rating: 0,
     followers: 0,
@@ -35,4 +38,37 @@ export async function getShops() {
   // và không có trang nào trong frontend gọi hàm này — giữ mock, không phải quên nối API thật.
   await delay(150);
   return shops;
+}
+
+// --- Seller Dashboard ---
+
+export async function registerShop({ name, description }) {
+  const dto = await apiFetch('/shops', { method: 'POST', body: JSON.stringify({ name, description }) });
+  return adaptShop(dto);
+}
+
+export async function getMyShop() {
+  try {
+    const dto = await apiFetch('/shops/mine');
+    return adaptShop(dto);
+  } catch {
+    // 404 (Not Found) nghĩa là Seller chưa đăng ký shop — coi như "chưa có", không phải lỗi.
+    return null;
+  }
+}
+
+// --- Admin Dashboard ---
+
+export async function getAllShops(status) {
+  const params = status ? `?status=${encodeURIComponent(status)}` : '';
+  const list = await apiFetch(`/shops${params}`);
+  return list.map(adaptShop);
+}
+
+export async function approveShop(id) {
+  return apiFetch(`/shops/${id}/approve`, { method: 'PUT' });
+}
+
+export async function rejectShop(id) {
+  return apiFetch(`/shops/${id}/reject`, { method: 'PUT' });
 }

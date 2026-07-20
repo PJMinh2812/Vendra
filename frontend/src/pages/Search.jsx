@@ -3,8 +3,11 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { getProducts } from '../api/products';
 import { getCategories } from '../api/categories';
 import ProductCard from '../components/ProductCard';
+import Pagination from '../components/Pagination';
 import { ProductGridSkeleton } from '../components/Skeleton';
 import './Search.css';
+
+const PAGE_SIZE = 20;
 
 export default function Search() {
   const { categoryId } = useParams();
@@ -14,26 +17,38 @@ export default function Search() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [sort, setSort] = useState('popular');
   const [priceFilter, setPriceFilter] = useState(null); // { min, max } | null
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getCategories().then(setCategories);
   }, []);
 
+  // Đổi bộ lọc/từ khóa/sắp xếp thì luôn quay về trang 1 — tránh kẹt ở trang 5 của kết quả cũ.
+  useEffect(() => {
+    setPage(1);
+  }, [query, categoryId, sort, priceFilter]);
+
   useEffect(() => {
     setLoading(true);
-    getProducts({ search: query, categoryId, sort, pageSize: 40 }).then((res) => {
-      let items = res.items;
-      if (priceFilter) {
-        items = items.filter((p) => p.price >= priceFilter.min && p.price <= priceFilter.max);
-      }
-      setProducts(items);
-      setTotal(items.length);
+    getProducts({
+      search: query,
+      categoryId,
+      sort,
+      page,
+      pageSize: PAGE_SIZE,
+      minPrice: priceFilter?.min ?? null,
+      maxPrice: priceFilter && Number.isFinite(priceFilter.max) ? priceFilter.max : null,
+    }).then((res) => {
+      setProducts(res.items);
+      setTotal(res.total);
+      setTotalPages(res.totalPages);
       setLoading(false);
     });
-  }, [query, categoryId, sort, priceFilter]);
+  }, [query, categoryId, sort, priceFilter, page]);
 
   const activeCategory = categories.find((c) => c.id === categoryId);
 
@@ -117,11 +132,14 @@ export default function Search() {
           ) : products.length === 0 ? (
             <p className="text-muted">Không tìm thấy sản phẩm phù hợp.</p>
           ) : (
-            <div className="product-grid">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
+            <>
+              <div className="product-grid">
+                {products.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+            </>
           )}
         </div>
       </div>

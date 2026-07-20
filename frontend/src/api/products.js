@@ -35,17 +35,30 @@ function applySort(items, sort) {
   return items; // 'popular' — backend không có cột lượt bán, giữ nguyên thứ tự server trả về
 }
 
-export async function getProducts({ search = '', categoryId = null, sort = 'popular', page = 1, pageSize = 20 } = {}) {
+export async function getProducts({
+  search = '',
+  categoryId = null,
+  shopId = null,
+  minPrice = null,
+  maxPrice = null,
+  sort = 'popular',
+  page = 1,
+  pageSize = 20,
+} = {}) {
   if (!USE_MOCK) {
     const params = new URLSearchParams({ page, pageSize });
     if (search) params.set('search', search);
     if (categoryId) params.set('categoryId', categoryId);
+    if (shopId) params.set('shopId', shopId);
+    if (minPrice != null) params.set('minPrice', minPrice);
+    if (maxPrice != null) params.set('maxPrice', maxPrice);
     const res = await apiFetch(`/products?${params}`);
     return {
       items: applySort(res.items.map(adaptProduct), sort),
       total: res.totalCount,
       page: res.page,
       pageSize: res.pageSize,
+      totalPages: Math.max(1, Math.ceil(res.totalCount / res.pageSize)),
     };
   }
 
@@ -53,7 +66,10 @@ export async function getProducts({ search = '', categoryId = null, sort = 'popu
   let result = products.filter((p) => {
     const matchesSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = !categoryId || p.categoryId === categoryId;
-    return matchesSearch && matchesCategory;
+    const matchesShop = !shopId || p.shopId === shopId;
+    const matchesMin = minPrice == null || p.price >= minPrice;
+    const matchesMax = maxPrice == null || p.price <= maxPrice;
+    return matchesSearch && matchesCategory && matchesShop && matchesMin && matchesMax;
   });
 
   if (sort === 'price-asc') result = [...result].sort((a, b) => a.price - b.price);
@@ -67,6 +83,7 @@ export async function getProducts({ search = '', categoryId = null, sort = 'popu
     total: result.length,
     page,
     pageSize,
+    totalPages: Math.max(1, Math.ceil(result.length / pageSize)),
   };
 }
 
@@ -77,4 +94,19 @@ export async function getProductById(id) {
   }
   await delay();
   return findMockProduct(id);
+}
+
+// Dùng cho Seller Dashboard — chỉ gọi thật, không có nhánh mock (USE_MOCK đang tắt và các trang
+// dùng 3 hàm này chỉ tồn tại để thao tác với backend thật).
+export async function createProduct(dto) {
+  const created = await apiFetch('/products', { method: 'POST', body: JSON.stringify(dto) });
+  return adaptProduct(created);
+}
+
+export async function updateProduct(id, dto) {
+  return apiFetch(`/products/${id}`, { method: 'PUT', body: JSON.stringify(dto) });
+}
+
+export async function deleteProduct(id) {
+  return apiFetch(`/products/${id}`, { method: 'DELETE' });
 }

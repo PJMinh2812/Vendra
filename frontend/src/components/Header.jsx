@@ -29,7 +29,13 @@ export default function Header() {
     <header className={`header ${scrolled ? 'header--scrolled' : ''}`}>
       <div className="header__top">
         <div className="container header__top-inner">
-          <span>Kênh Người Bán</span>
+          <Link to="/seller">Kênh Người Bán</Link>
+          {user?.role === 'Admin' && (
+            <>
+              <span className="header__divider" />
+              <Link to="/admin/shops">Quản Trị</Link>
+            </>
+          )}
           <span className="header__divider" />
           <span>Kết nối</span>
           <div className="header__top-right">
