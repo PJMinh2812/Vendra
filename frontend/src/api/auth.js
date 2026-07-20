@@ -1,4 +1,4 @@
-import { USE_MOCK, delay, apiFetch, setTokens, clearTokens } from './client';
+import { USE_MOCK, delay, apiFetch, setTokens, clearTokens, getRefreshToken } from './client';
 
 const ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 
@@ -62,6 +62,10 @@ export async function register({ email, password, fullName, role = 'Customer' })
 }
 
 export function logout() {
+  const refreshToken = getRefreshToken();
+  if (refreshToken) {
+    apiFetch('/auth/revoke', { method: 'POST', body: JSON.stringify({ refreshToken }) }).catch(() => {});
+  }
   clearTokens();
 }
 
